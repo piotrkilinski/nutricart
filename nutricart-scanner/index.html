@@ -489,7 +489,7 @@
 <body>
 <div id="root"></div>
 
-<script type="text/babel">
+<script type="text/babel" data-type="module" data-presets="react">
 const { useState, useEffect, useRef, useCallback } = React;
 
 const API_URL = 'https://nutricart-production.up.railway.app/api';
@@ -661,7 +661,7 @@ function ResultCard({ result }) {
 
 // ── Main App ───────────────────────────────────────────────────────────────────
 
-export default function App() {
+function App() {
   const [stores, setStores] = useState([]);
   const [selectedStore, setSelectedStore] = useState(null);
   const [scannerActive, setScannerActive] = useState(false);
@@ -798,7 +798,6 @@ export default function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-</script>
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);</script>
 </body>
 </html>
