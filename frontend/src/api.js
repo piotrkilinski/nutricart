@@ -5,11 +5,11 @@ export async function fetchStores() {
   return res.json();
 }
 
-export async function generatePlan(store_ids, target_calories) {
+export async function generatePlan(store_ids, target_calories, modes = {}) {
   const res = await fetch(`${BASE}/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ store_ids, target_calories })
+    body: JSON.stringify({ store_ids, target_calories, modes })
   });
   if (!res.ok) {
     const err = await res.json();
