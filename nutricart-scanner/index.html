@@ -9,8 +9,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-  <!-- ZXing dla skanowania kodów kreskowych -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/zxing-library/0.19.1/zxing.min.js"></script>
+  <!-- html5-qrcode - niezawodna biblioteka do skanowania -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
@@ -511,84 +511,61 @@ function MacroBox({ val, lbl, className }) {
   );
 }
 
-// ── Scanner Component ────────────────────────────────────────────────────────
+// ── Scanner Component (html5-qrcode) ─────────────────────────────────────────
 
 function BarcodeScanner({ onDetected, active }) {
-  const videoRef = useRef(null);
-  const readerRef = useRef(null);
-  const streamRef = useRef(null);
+  const scannerRef = useRef(null);
+  const html5QrRef = useRef(null);
 
   useEffect(() => {
-    if (!active) {
-      stopCamera();
-      return;
+    if (active) {
+      startScanner();
+    } else {
+      stopScanner();
     }
-    startCamera();
-    return () => stopCamera();
+    return () => stopScanner();
   }, [active]);
 
-  async function startCamera() {
+  async function startScanner() {
+    if (!scannerRef.current) return;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-
-      // Inicjalizuj ZXing
-      if (window.ZXing) {
-        const hints = new window.ZXing.Map();
-        const formats = [
-          window.ZXing.BarcodeFormat.EAN_13,
-          window.ZXing.BarcodeFormat.EAN_8,
-          window.ZXing.BarcodeFormat.CODE_128,
-        ];
-        hints.set(window.ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
-        const reader = new window.ZXing.BrowserMultiFormatReader(hints);
-        readerRef.current = reader;
-
-        reader.decodeFromVideoElement(videoRef.current, (result, err) => {
-          if (result) {
-            onDetected(result.getText());
-          }
-        });
-      }
+      const scanner = new Html5Qrcode("qr-reader");
+      html5QrRef.current = scanner;
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
+        (decodedText) => { onDetected(decodedText); },
+        () => {}
+      );
     } catch (err) {
-      console.error('Camera error:', err);
+      console.error("Scanner error:", err);
     }
   }
 
-  function stopCamera() {
-    if (readerRef.current) {
-      try { readerRef.current.reset(); } catch(e) {}
-      readerRef.current = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
-      streamRef.current = null;
+  async function stopScanner() {
+    if (html5QrRef.current) {
+      try {
+        await html5QrRef.current.stop();
+        html5QrRef.current.clear();
+      } catch(e) {}
+      html5QrRef.current = null;
     }
   }
 
   return (
     <div className="scanner-box">
-      <video ref={videoRef} muted playsInline style={{ display: active ? 'block' : 'none' }} />
-      {active ? (
-        <div className="scanner-overlay">
-          <div className="scan-frame">
-            <div className="scan-frame-inner" />
-            <div className="scan-line" />
-          </div>
-          <div className="scan-hint">SKIERUJ KAMERĘ NA KOD KRESKOWY</div>
-        </div>
-      ) : (
+      <div id="qr-reader" style={{ width: "100%", display: active ? "block" : "none" }} />
+      {!active && (
         <div className="scanner-placeholder">
           <div className="scanner-icon">📷</div>
           <div className="scanner-start-text">
             Kliknij "Uruchom skaner"<br/>aby zeskanować kod kreskowy
           </div>
+        </div>
+      )}
+      {active && (
+        <div className="scanner-overlay" style={{pointerEvents:'none'}}>
+          <div className="scan-hint" style={{marginTop: 8}}>SKIERUJ KAMERĘ NA KOD KRESKOWY</div>
         </div>
       )}
     </div>

@@ -3,13 +3,12 @@ const router = express.Router();
 const db = require('../db');
 
 const OFF_API = 'https://world.openfoodfacts.org/api/v2/product';
-
 const FIELDS = [
   'product_name', 'product_name_pl', 'brands', 'quantity', 'serving_size',
   'categories_tags', 'labels_tags',
   'ingredients_text', 'ingredients_text_pl',
   'allergens_tags', 'traces_tags', 'additives_tags',
-  'nutriments', 'nutrition_grades', 'nutriscore_data',
+  'nutriments', 'nutrition_grades',
   'nova_group', 'ecoscore_grade',
   'image_front_url', 'image_nutrition_url', 'image_ingredients_url',
   'packaging_tags', 'origins', 'countries_tags',
@@ -23,7 +22,6 @@ router.get('/:barcode', async (req, res) => {
   try {
     // Sprawdz czy produkt juz istnieje
     const [existing] = await db.query('SELECT * FROM products WHERE barcode = ?', [barcode]);
-
     if (existing.length > 0) {
       const product = existing[0];
       if (store_id) {
@@ -55,7 +53,8 @@ router.get('/:barcode', async (req, res) => {
     const labels = p.labels_tags || [];
     const attrs = extractAttributes(p.attribute_groups_en || []);
 
-    const productData = {
+    // Buduj obiekt z danymi — INSERT użyje kluczy jako nazw kolumn
+    const data = {
       name: p.product_name_pl || p.product_name || 'Nieznany produkt',
       barcode,
       brand: p.brands || null,
@@ -75,7 +74,7 @@ router.get('/:barcode', async (req, res) => {
       salt_per_100g: n.salt_100g || null,
       sodium_per_100g: n.sodium_100g ? n.sodium_100g * 1000 : null,
 
-      // Witaminy (OFF w g → przelicz)
+      // Witaminy
       vitamin_a_per_100g: n['vitamin-a_100g'] ? n['vitamin-a_100g'] * 1000000 : null,
       vitamin_b1_per_100g: n['vitamin-b1_100g'] ? n['vitamin-b1_100g'] * 1000 : null,
       vitamin_b2_per_100g: n['vitamin-b2_100g'] ? n['vitamin-b2_100g'] * 1000 : null,
@@ -88,7 +87,7 @@ router.get('/:barcode', async (req, res) => {
       vitamin_e_per_100g: n['vitamin-e_100g'] ? n['vitamin-e_100g'] * 1000 : null,
       vitamin_k_per_100g: n['vitamin-k_100g'] ? n['vitamin-k_100g'] * 1000000 : null,
 
-      // Minerały (OFF w g → przelicz na mg)
+      // Minerały
       calcium_per_100g: n.calcium_100g ? n.calcium_100g * 1000 : null,
       iron_per_100g: n.iron_100g ? n.iron_100g * 1000 : null,
       magnesium_per_100g: n.magnesium_100g ? n.magnesium_100g * 1000 : null,
@@ -135,53 +134,20 @@ router.get('/:barcode', async (req, res) => {
       off_data: JSON.stringify(offData.product),
     };
 
-    // Zapisz do bazy
+    // Dynamiczny INSERT — kolumny i wartości generowane z obiektu
+    // Gwarantuje że liczba kolumn = liczba wartości
+    const columns = Object.keys(data);
+    const values = Object.values(data);
+    const placeholders = columns.map(() => '?').join(', ');
+    const columnNames = columns.map(c => `\`${c}\``).join(', ');
+
     const conn = await db.getConnection();
     try {
       await conn.beginTransaction();
 
       const [result] = await conn.query(
-        `INSERT INTO products (
-          name, barcode, brand, quantity, category, serving_unit, serving_weight_g,
-          calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g,
-          fiber_per_100g, sugars_per_100g, saturated_fat_per_100g, salt_per_100g, sodium_per_100g,
-          vitamin_a_per_100g, vitamin_b1_per_100g, vitamin_b2_per_100g, vitamin_b3_per_100g,
-          vitamin_b6_per_100g, vitamin_b9_per_100g, vitamin_b12_per_100g,
-          vitamin_c_per_100g, vitamin_d_per_100g, vitamin_e_per_100g, vitamin_k_per_100g,
-          calcium_per_100g, iron_per_100g, magnesium_per_100g, phosphorus_per_100g,
-          potassium_per_100g, zinc_per_100g, selenium_per_100g, copper_per_100g,
-          manganese_per_100g, iodine_per_100g, chromium_per_100g,
-          ingredients_text, allergens, traces, additives,
-          nutriscore, nova_group, ecoscore,
-          is_vegan, is_vegetarian, is_gluten_free, is_lactose_free,
-          is_organic, is_palm_oil_free, is_halal, is_kosher,
-          packaging, origins, countries,
-          image_url, image_nutrition_url, image_ingredients_url,
-          off_data
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-        [
-          productData.name, productData.barcode, productData.brand, productData.quantity,
-          productData.category, productData.serving_unit, productData.serving_weight_g,
-          productData.calories_per_100g, productData.protein_per_100g, productData.carbs_per_100g, productData.fat_per_100g,
-          productData.fiber_per_100g, productData.sugars_per_100g, productData.saturated_fat_per_100g,
-          productData.salt_per_100g, productData.sodium_per_100g,
-          productData.vitamin_a_per_100g, productData.vitamin_b1_per_100g, productData.vitamin_b2_per_100g,
-          productData.vitamin_b3_per_100g, productData.vitamin_b6_per_100g, productData.vitamin_b9_per_100g,
-          productData.vitamin_b12_per_100g, productData.vitamin_c_per_100g, productData.vitamin_d_per_100g,
-          productData.vitamin_e_per_100g, productData.vitamin_k_per_100g,
-          productData.calcium_per_100g, productData.iron_per_100g, productData.magnesium_per_100g,
-          productData.phosphorus_per_100g, productData.potassium_per_100g, productData.zinc_per_100g,
-          productData.selenium_per_100g, productData.copper_per_100g, productData.manganese_per_100g,
-          productData.iodine_per_100g, productData.chromium_per_100g,
-          productData.ingredients_text, productData.allergens, productData.traces, productData.additives,
-          productData.nutriscore, productData.nova_group, productData.ecoscore,
-          productData.is_vegan, productData.is_vegetarian, productData.is_gluten_free,
-          productData.is_lactose_free, productData.is_organic, productData.is_palm_oil_free,
-          productData.is_halal, productData.is_kosher,
-          productData.packaging, productData.origins, productData.countries,
-          productData.image_url, productData.image_nutrition_url, productData.image_ingredients_url,
-          productData.off_data,
-        ]
+        `INSERT INTO products (${columnNames}) VALUES (${placeholders})`,
+        values
       );
 
       if (store_id) {
@@ -195,7 +161,7 @@ router.get('/:barcode', async (req, res) => {
       res.status(201).json({
         status: 'created',
         message: 'Produkt dodany do bazy',
-        product: { id: result.insertId, ...productData, store_ids: store_id ? [parseInt(store_id)] : [] }
+        product: { id: result.insertId, ...data, store_ids: store_id ? [parseInt(store_id)] : [] }
       });
     } catch (err) {
       await conn.rollback();
@@ -209,6 +175,8 @@ router.get('/:barcode', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function inferFromLabels(labels, keywords) {
   if (!labels?.length) return null;
@@ -232,18 +200,15 @@ function mapCategory(tags) {
     'en:dairies': 'nabiał', 'en:cheeses': 'nabiał', 'en:yogurts': 'nabiał',
     'en:fruits': 'owoce', 'en:fresh-fruits': 'owoce',
     'en:vegetables': 'warzywa', 'en:fresh-vegetables': 'warzywa',
-    'en:meats': 'mięso', 'en:poultry': 'mięso', 'en:fish': 'mięso', 'en:seafood': 'mięso',
+    'en:meats': 'mięso', 'en:poultry': 'mięso', 'en:fish': 'mięso',
     'en:cereals': 'zboża', 'en:breads': 'zboża', 'en:pasta': 'zboża', 'en:rice': 'zboża',
     'en:beverages': 'napoje', 'en:waters': 'napoje', 'en:juices': 'napoje',
     'en:sweets': 'słodycze', 'en:chocolates': 'słodycze', 'en:biscuits': 'słodycze',
-    'en:snacks': 'przekąski', 'en:chips': 'przekąski',
-    'en:legumes': 'strączkowe', 'en:nuts': 'orzechy',
+    'en:snacks': 'przekąski', 'en:legumes': 'strączkowe', 'en:nuts': 'orzechy',
     'en:sauces': 'sosy', 'en:spices': 'przyprawy',
     'en:frozen-foods': 'mrożone', 'en:canned-foods': 'konserwy',
   };
-  for (const tag of tags) {
-    if (map[tag]) return map[tag];
-  }
+  for (const tag of tags) { if (map[tag]) return map[tag]; }
   return 'inne';
 }
 
