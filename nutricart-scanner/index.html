@@ -483,17 +483,268 @@
       0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
       40% { transform: scale(1); opacity: 1; }
     }
-  </style>
+  
+    /* ── Menu główne ── */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .menu-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      text-align: left;
+      min-height: 120px;
+    }
+
+    .menu-card:active { transform: scale(0.97); }
+
+    .menu-card:hover {
+      border-color: var(--accent);
+      background: rgba(34, 211, 238, 0.04);
+    }
+
+    .menu-card-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .menu-card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .menu-card-sub {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    /* ── Back button ── */
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 4px 0;
+      margin-left: -2px;
+    }
+
+    /* ── Product list ── */
+    .product-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(30, 58, 95, 0.5);
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .product-row:active { opacity: 0.7; }
+
+    .product-row-img {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      background: var(--surface2);
+      object-fit: contain;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+
+    .product-row-info { flex: 1; min-width: 0; }
+
+    .product-row-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .product-row-meta {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .status-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      padding: 3px 7px;
+      border-radius: 6px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .status-badge.active { background: rgba(74,222,128,0.12); color: var(--green); }
+    .status-badge.inactive { background: rgba(248,113,113,0.12); color: var(--red); }
+    .status-badge.deleted { background: rgba(100,116,139,0.15); color: var(--muted); }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+
+    .filter-chip {
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .filter-chip.active {
+      border-color: var(--accent);
+      background: rgba(34,211,238,0.1);
+      color: var(--accent);
+    }
+
+    /* ── Saved barcodes ── */
+    .barcode-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 8px;
+    }
+
+    .barcode-code {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      color: var(--accent);
+    }
+
+    .barcode-store {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .add-btn-sm {
+      padding: 7px 14px;
+      border-radius: 8px;
+      background: rgba(34,211,238,0.1);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── Search input ── */
+    .search-input {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 14px;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--muted); }
+
+    /* ── Store row ── */
+    .store-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 10px;
+    }
+
+    .store-row-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    /* Scan bulk counter */
+    .bulk-counter {
+      background: var(--surface2);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .bulk-count {
+      font-family: 'Syne', sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .bulk-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+</style>
 </head>
 <body>
 <div id="root"></div>
 
-<script type="text/babel" data-type="module" data-presets="react">
+<script type="text/babel" data-presets="react">
 const { useState, useEffect, useRef } = React;
+const API = 'https://nutricart-production.up.railway.app/api';
 
-const API_URL = 'https://nutricart-production.up.railway.app/api';
+// ── Globals ───────────────────────────────────────────────────────────────────
 
-// ── Małe komponenty pomocnicze ────────────────────────────────────────────────
+function useStores() {
+  const [stores, setStores] = useState([]);
+  const reload = () => fetch(`${API}/stores?all=1`).then(r=>r.json()).then(setStores).catch(()=>{});
+  useEffect(()=>{ reload(); }, []);
+  return [stores, reload];
+}
+
+// ── Małe komponenty ───────────────────────────────────────────────────────────
 
 function NutriScore({ grade }) {
   if (!grade) return null;
@@ -503,383 +754,737 @@ function NutriScore({ grade }) {
 
 function MacroBox({ val, lbl, className }) {
   return (
-    <div className={`macro-box ${className || ''}`}>
-      <div className="macro-val">{val != null ? Math.round(val) : '—'}</div>
+    <div className={`macro-box ${className||''}`}>
+      <div className="macro-val">{val!=null ? Math.round(val) : '—'}</div>
       <div className="macro-lbl">{lbl}</div>
     </div>
   );
 }
 
+function Toast({ msg }) {
+  if (!msg) return null;
+  return <div className="toast">{msg}</div>;
+}
+
+function Dots() {
+  return <div className="loading-dots"><span/><span/><span/></div>;
+}
+
+function BackBtn({ onBack, label = '← Wróć' }) {
+  return (
+    <button className="back-btn" onClick={onBack}>
+      <span style={{fontSize:18}}>←</span> {label}
+    </button>
+  );
+}
+
+function StatusBadge({ status }) {
+  const map = { active:'🟢 aktywny', inactive_incomplete:'🔴 niekompletny', inactive_deleted:'⚫ usunięty', active_store:'🟢', inactive:'🔴', deleted:'⚫' };
+  return <span className={`status-badge ${status?.includes('active') && !status.includes('in') ? 'active' : status?.includes('deleted') ? 'deleted' : 'inactive'}`}>{map[status] || status}</span>;
+}
+
 // ── BarcodeScanner ────────────────────────────────────────────────────────────
 
-function BarcodeScanner({ onDetected, active }) {
+function BarcodeScanner({ active, onDetected, continuous = false }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const rafRef = useRef(null);
-  const detectedRef = useRef(false);
+  const lastDetected = useRef('');
 
   useEffect(() => {
-    if (active) { detectedRef.current = false; startCamera(); }
-    else stopCamera();
+    if (active) startCamera(); else stopCamera();
     return () => stopCamera();
   }, [active]);
 
   async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
       });
       streamRef.current = stream;
       if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); }
-
       if ('BarcodeDetector' in window) {
-        const detector = new BarcodeDetector({
-          formats: ['ean_13', 'ean_8', 'code_128', 'upc_a', 'upc_e', 'qr_code']
-        });
+        const detector = new BarcodeDetector({ formats: ['ean_13','ean_8','code_128','upc_a','upc_e','qr_code'] });
         const scan = async () => {
-          if (!videoRef.current || detectedRef.current) return;
+          if (!videoRef.current) return;
           if (videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
             try {
               const barcodes = await detector.detect(videoRef.current);
-              if (barcodes.length > 0) { detectedRef.current = true; onDetected(barcodes[0].rawValue); return; }
+              if (barcodes.length > 0) {
+                const val = barcodes[0].rawValue;
+                if (continuous) {
+                  // w trybie bulk — zapobiegaj duplikatom przez 2s
+                  if (val !== lastDetected.current) {
+                    lastDetected.current = val;
+                    onDetected(val);
+                    setTimeout(() => { lastDetected.current = ''; }, 2000);
+                  }
+                } else {
+                  onDetected(val);
+                  return;
+                }
+              }
             } catch(e) {}
           }
           rafRef.current = requestAnimationFrame(scan);
         };
         videoRef.current.addEventListener('loadeddata', () => { rafRef.current = requestAnimationFrame(scan); });
       }
-    } catch (err) { console.error('Camera error:', err); }
+    } catch(e) { console.error(e); }
   }
 
   function stopCamera() {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
+    if (streamRef.current) { streamRef.current.getTracks().forEach(t=>t.stop()); streamRef.current = null; }
   }
 
   return (
-    <div className="scanner-box" style={{ background: '#000', position: 'relative', overflow: 'hidden', borderRadius: 20, aspectRatio: '4/3' }}>
+    <div className="scanner-box" style={{background:'#000',position:'relative',overflow:'hidden',borderRadius:20,aspectRatio:'4/3',marginBottom:16}}>
       <video ref={videoRef} muted playsInline autoPlay
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: active ? 'block' : 'none' }} />
+        style={{width:'100%',height:'100%',objectFit:'cover',display:active?'block':'none'}} />
       {active && (
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <div className="scan-frame"><div className="scan-frame-inner" /><div className="scan-line" /></div>
-          <div className="scan-hint" style={{ marginTop: 12 }}>SKIERUJ KAMERĘ NA KOD KRESKOWY</div>
+        <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',pointerEvents:'none'}}>
+          <div className="scan-frame"><div className="scan-frame-inner"/><div className="scan-line"/></div>
+          <div className="scan-hint" style={{marginTop:12}}>SKIERUJ KAMERĘ NA KOD KRESKOWY</div>
         </div>
       )}
       {!active && (
         <div className="scanner-placeholder">
           <div className="scanner-icon">📷</div>
-          <div className="scanner-start-text">Kliknij "Uruchom skaner"<br/>aby zeskanować kod kreskowy</div>
+          <div className="scanner-start-text">Kliknij aby uruchomić kamerę</div>
         </div>
       )}
     </div>
   );
 }
 
-// ── ConfigScreen — ekran konfiguracji produktu (nowy i istniejący) ────────────
+// ── ConfigScreen ──────────────────────────────────────────────────────────────
 
 function ConfigScreen({ barcode, stores, onSaved, onBack }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [isNew, setIsNew] = useState(true);
-
-  // Dane produktu do wyświetlenia (z OFF lub bazy)
   const [preview, setPreview] = useState(null);
-
-  // Konfigurowalne pola
   const [selectedStores, setSelectedStores] = useState([]);
   const [readyToEat, setReadyToEat] = useState(null);
   const [activate, setActivate] = useState(false);
 
-  useEffect(() => { loadProduct(); }, [barcode]);
+  useEffect(() => { load(); }, [barcode]);
 
-  async function loadProduct() {
-    setLoading(true);
-    setError('');
+  async function load() {
+    setLoading(true); setError('');
     try {
-      const res = await fetch(`${API_URL}/scan/${barcode}`);
+      const res = await fetch(`${API}/scan/${barcode}`);
       const data = await res.json();
-
       if (res.status === 404) { setError('Produkt nie znaleziony w OpenFoodFacts'); setLoading(false); return; }
-      if (!res.ok) { setError(data.error || 'Błąd pobierania danych'); setLoading(false); return; }
-
+      if (!res.ok) { setError(data.error || 'Błąd'); setLoading(false); return; }
       setIsNew(data.is_new);
-
+      setPreview(data.off_preview || data.product);
       if (data.is_new) {
-        // Nowy — pokaż dane z OFF, domyślne ustawienia
-        setPreview(data.off_preview);
-        setSelectedStores([]);
-        setReadyToEat(null);
-        setActivate(false);
+        setSelectedStores([]); setReadyToEat(null); setActivate(false);
       } else {
-        // Istniejący — pokaż dane z bazy, wczytaj aktualne ustawienia
-        const prod = data.product;
-        // Uzupełnij brakujące pola z OFF preview jeśli są
-        setPreview(data.off_preview || prod);
-        setSelectedStores(prod.store_ids || []);
-        setReadyToEat(prod.is_ready_to_eat === 1 ? true : prod.is_ready_to_eat === 0 ? false : null);
-        setActivate(prod.status === 'active');
+        const p = data.product;
+        setSelectedStores(p.store_ids || []);
+        setReadyToEat(p.is_ready_to_eat === 1 ? true : p.is_ready_to_eat === 0 ? false : null);
+        setActivate(p.status === 'active');
       }
-    } catch(e) {
-      setError('Błąd połączenia z API');
-    } finally {
-      setLoading(false);
-    }
+    } catch(e) { setError('Błąd połączenia'); }
+    finally { setLoading(false); }
   }
 
   function toggleStore(id) {
-    setSelectedStores(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    setSelectedStores(prev => prev.includes(id) ? prev.filter(x=>x!==id) : [...prev, id]);
   }
 
-  async function handleSave() {
-    setSaving(true);
-    setError('');
+  async function save() {
+    setSaving(true); setError('');
     try {
-      const body = {
-        ...preview,
-        store_ids: selectedStores,
+      const body = { ...preview, store_ids: selectedStores,
         status: activate ? 'active' : 'inactive_incomplete',
-        is_ready_to_eat: readyToEat === null ? null : (readyToEat ? 1 : 0),
-      };
-
-      const res = await fetch(`${API_URL}/scan/${barcode}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        is_ready_to_eat: readyToEat === null ? null : (readyToEat ? 1 : 0) };
+      const res = await fetch(`${API}/scan/${barcode}`, {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Błąd zapisu');
       onSaved(data.status, data.product);
-    } catch(e) {
-      setError(e.message);
-    } finally {
-      setSaving(false);
-    }
+    } catch(e) { setError(e.message); }
+    finally { setSaving(false); }
   }
 
-  if (loading) return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="loading-dots"><span/><span/><span/></div>
-    </div>
-  );
+  if (loading) return <div style={{minHeight:'100vh',background:'var(--bg)',display:'flex',alignItems:'center',justifyContent:'center'}}><Dots/></div>;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+    <div style={{minHeight:'100vh',background:'var(--bg)'}}>
       <div className="header">
         <div className="header-top">
-          <div className="logo-icon">{isNew ? '➕' : '✏️'}</div>
+          <button className="back-btn" onClick={onBack} style={{marginRight:8}}>←</button>
+          <div className="logo-icon">{isNew?'➕':'✏️'}</div>
           <div>
             <div className="logo-text">NutriCart</div>
-            <div className="logo-sub">{isNew ? 'Nowy produkt' : 'Edytuj produkt'}</div>
+            <div className="logo-sub">{isNew?'Nowy produkt':'Edytuj produkt'}</div>
           </div>
         </div>
       </div>
-
       <div className="screen">
-        {error && <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid var(--red)', borderRadius: 12, padding: 12, marginBottom: 16, color: 'var(--red)', fontSize: 13 }}>{error}</div>}
-
-        {/* Podgląd produktu */}
+        {error && <div style={{background:'rgba(248,113,113,0.1)',border:'1px solid var(--red)',borderRadius:12,padding:12,marginBottom:16,color:'var(--red)',fontSize:13}}>{error}</div>}
         {preview && (
-          <div className="result-card" style={{ marginBottom: 20 }}>
-            <div className={`result-status ${isNew ? 'created' : 'existing'}`}>
-              {isNew ? '🆕 Nowy produkt z OpenFoodFacts' : '📦 Produkt już w bazie NutriCart'}
-            </div>
+          <div className="result-card" style={{marginBottom:20}}>
+            <div className={`result-status ${isNew?'created':'existing'}`}>{isNew?'🆕 Nowy produkt z OpenFoodFacts':'📦 Produkt już w bazie NutriCart'}</div>
             <div className="result-body">
               <div className="result-top">
-                {preview.image_url
-                  ? <img className="product-img" src={preview.image_url} alt={preview.name} />
-                  : <div className="product-img-placeholder">🥫</div>
-                }
+                {preview.image_url ? <img className="product-img" src={preview.image_url} alt={preview.name}/> : <div className="product-img-placeholder">🥫</div>}
                 <div className="product-info">
                   {preview.brand && <div className="product-brand">{preview.brand}</div>}
-                  <div className="product-name">
-                    {preview.name}
-                    {preview.nutriscore && <NutriScore grade={preview.nutriscore} />}
-                  </div>
-                  <div className="product-category">{preview.category || 'inne'} {preview.quantity ? `· ${preview.quantity}` : ''}</div>
+                  <div className="product-name">{preview.name}<NutriScore grade={preview.nutriscore}/></div>
+                  <div className="product-category">{preview.category||'inne'}{preview.quantity?` · ${preview.quantity}`:''}</div>
                 </div>
               </div>
               <div className="macros-grid">
-                <MacroBox val={preview.calories_per_100g} lbl="kcal" className="macro-kcal" />
-                <MacroBox val={preview.protein_per_100g} lbl="białko g" />
-                <MacroBox val={preview.carbs_per_100g} lbl="węglowo." />
-                <MacroBox val={preview.fat_per_100g} lbl="tłuszcze g" />
+                <MacroBox val={preview.calories_per_100g} lbl="kcal" className="macro-kcal"/>
+                <MacroBox val={preview.protein_per_100g} lbl="białko g"/>
+                <MacroBox val={preview.carbs_per_100g} lbl="węglowo."/>
+                <MacroBox val={preview.fat_per_100g} lbl="tłuszcze g"/>
               </div>
-              {preview.nova_group && (
-                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
-                  NOVA {preview.nova_group} · {['','nieprzetworzone','minimalnie przetworzone','przetworzone składniki','ultraprzetworzone'][preview.nova_group] || ''}
-                </div>
-              )}
               <div className="barcode-display">BARCODE: {barcode}</div>
             </div>
           </div>
         )}
 
-        {/* Wybór sklepów */}
         <div className="section-label">Sklepy</div>
-        <div className="store-grid" style={{ marginBottom: 24 }}>
-          {stores.map(s => (
-            <button key={s.id}
-              className={`store-btn ${selectedStores.includes(s.id) ? 'active' : ''}`}
-              onClick={() => toggleStore(s.id)}>
-              {selectedStores.includes(s.id) ? '✓ ' : ''}{s.name}
+        <div className="store-grid" style={{marginBottom:24}}>
+          {stores.filter(s=>s.status!=='deleted').map(s=>(
+            <button key={s.id} className={`store-btn ${selectedStores.includes(s.id)?'active':''}`} onClick={()=>toggleStore(s.id)}>
+              {selectedStores.includes(s.id)?'✓ ':''}{s.name}
             </button>
           ))}
         </div>
 
-        {/* Gotowy do spożycia */}
-        <div className="section-label">Gotowy do spożycia bez przygotowania?</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 24 }}>
-          {[
-            { val: true,  label: '✅ Tak',     sub: 'jogurt, jabłko…' },
-            { val: false, label: '🍳 Nie',      sub: 'ryż, mąka…' },
-            { val: null,  label: '❓ Nie wiem', sub: 'oznacz później' },
-          ].map(opt => (
-            <button key={String(opt.val)} onClick={() => setReadyToEat(opt.val)}
-              style={{
-                padding: '12px 6px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                background: readyToEat === opt.val ? 'rgba(34,211,238,0.12)' : 'var(--surface)',
-                outline: readyToEat === opt.val ? '2px solid var(--accent)' : '1px solid var(--border)',
-                color: readyToEat === opt.val ? 'var(--accent)' : 'var(--muted)',
-                transition: 'all 0.15s', textAlign: 'center',
-              }}>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>{opt.label}</div>
-              <div style={{ fontSize: 10, marginTop: 3, opacity: 0.7 }}>{opt.sub}</div>
+        <div className="section-label">Gotowy do spożycia?</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:24}}>
+          {[{val:true,label:'✅ Tak',sub:'jogurt, jabłko…'},{val:false,label:'🍳 Nie',sub:'ryż, mąka…'},{val:null,label:'❓ Nie wiem',sub:'później'}].map(opt=>(
+            <button key={String(opt.val)} onClick={()=>setReadyToEat(opt.val)}
+              style={{padding:'12px 6px',borderRadius:12,border:'none',cursor:'pointer',
+                background:readyToEat===opt.val?'rgba(34,211,238,0.12)':'var(--surface)',
+                outline:readyToEat===opt.val?'2px solid var(--accent)':'1px solid var(--border)',
+                color:readyToEat===opt.val?'var(--accent)':'var(--muted)',transition:'all 0.15s',textAlign:'center'}}>
+              <div style={{fontSize:13,fontWeight:600}}>{opt.label}</div>
+              <div style={{fontSize:10,marginTop:3,opacity:0.7}}>{opt.sub}</div>
             </button>
           ))}
         </div>
 
-        {/* Status */}
-        <div className="section-label">Status w NutriCart</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 28 }}>
-          {[
-            { val: true,  label: '🟢 Aktywny',   sub: 'widoczny w planach' },
-            { val: false, label: '🔴 Nieaktywny', sub: 'wymaga uzupełnienia' },
-          ].map(opt => (
-            <button key={String(opt.val)} onClick={() => setActivate(opt.val)}
-              style={{
-                padding: '12px 8px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                background: activate === opt.val ? 'rgba(74,222,128,0.08)' : 'var(--surface)',
-                outline: activate === opt.val ? '2px solid var(--green)' : '1px solid var(--border)',
-                color: activate === opt.val ? 'var(--green)' : 'var(--muted)',
-                transition: 'all 0.15s', textAlign: 'center',
-              }}>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>{opt.label}</div>
-              <div style={{ fontSize: 10, marginTop: 3, opacity: 0.7 }}>{opt.sub}</div>
+        <div className="section-label">Status</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:28}}>
+          {[{val:true,label:'🟢 Aktywny',sub:'widoczny w planach'},{val:false,label:'🔴 Nieaktywny',sub:'wymaga uzupełnienia'}].map(opt=>(
+            <button key={String(opt.val)} onClick={()=>setActivate(opt.val)}
+              style={{padding:'12px 8px',borderRadius:12,border:'none',cursor:'pointer',
+                background:activate===opt.val?'rgba(74,222,128,0.08)':'var(--surface)',
+                outline:activate===opt.val?'2px solid var(--green)':'1px solid var(--border)',
+                color:activate===opt.val?'var(--green)':'var(--muted)',transition:'all 0.15s',textAlign:'center'}}>
+              <div style={{fontSize:13,fontWeight:600}}>{opt.label}</div>
+              <div style={{fontSize:10,marginTop:3,opacity:0.7}}>{opt.sub}</div>
             </button>
           ))}
         </div>
 
-        <button className="btn-primary" onClick={handleSave} disabled={saving}>
-          {saving ? 'Zapisuję...' : (isNew ? '💾 Dodaj do bazy' : '💾 Zapisz zmiany')}
+        <button className="btn-primary" onClick={save} disabled={saving}>
+          {saving?'Zapisuję...':(isNew?'💾 Dodaj do bazy':'💾 Zapisz zmiany')}
         </button>
-        <button className="btn-secondary" onClick={onBack}>
-          ← Wróć bez zapisywania
-        </button>
+        <button className="btn-secondary" onClick={onBack}>← Wróć bez zapisywania</button>
       </div>
     </div>
   );
 }
 
-// ── Main App ──────────────────────────────────────────────────────────────────
+// ── SingleScanScreen ──────────────────────────────────────────────────────────
 
-function App() {
-  const [stores, setStores] = useState([]);
+function SingleScanScreen({ stores, onBack }) {
+  const [scannerActive, setScannerActive] = useState(false);
+  const [manualCode, setManualCode] = useState('');
+  const [configBarcode, setConfigBarcode] = useState(null);
+  const [toast, setToast] = useState('');
+
+  function showToast(msg) { setToast(msg); setTimeout(()=>setToast(''), 2500); }
+
+  function openConfig(bc) { setScannerActive(false); setConfigBarcode(bc); }
+
+  if (configBarcode) return (
+    <ConfigScreen barcode={configBarcode} stores={stores}
+      onSaved={(s)=>{ setConfigBarcode(null); setManualCode(''); showToast(s==='created'?'✓ Dodano!':'✓ Zapisano!'); }}
+      onBack={()=>setConfigBarcode(null)} />
+  );
+
+  return (
+    <div style={{minHeight:'100vh',background:'var(--bg)'}}>
+      <Toast msg={toast}/>
+      <div className="header">
+        <div className="header-top">
+          <button className="back-btn" onClick={onBack} style={{marginRight:8}}>←</button>
+          <div className="logo-icon">📷</div>
+          <div><div className="logo-text">NutriCart</div><div className="logo-sub">Skanowanie produktu</div></div>
+        </div>
+      </div>
+      <div className="screen">
+        <BarcodeScanner active={scannerActive} onDetected={openConfig}/>
+        <button className="btn-primary" onClick={()=>setScannerActive(v=>!v)}>
+          {scannerActive?'⏹ Zatrzymaj skaner':'📷 Uruchom skaner'}
+        </button>
+        <div className="manual-input-wrap">
+          <input className="manual-input" type="text" inputMode="numeric" placeholder="wpisz kod kreskowy..."
+            value={manualCode} onChange={e=>setManualCode(e.target.value)}
+            onKeyDown={e=>e.key==='Enter'&&manualCode.trim()&&openConfig(manualCode.trim())}/>
+          <button className="manual-btn" disabled={!manualCode.trim()} onClick={()=>openConfig(manualCode.trim())}>→</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── BulkScanScreen ────────────────────────────────────────────────────────────
+
+const SAVED_KEY = 'nutricart_saved_barcodes';
+
+function BulkScanScreen({ stores, onBack }) {
   const [selectedStore, setSelectedStore] = useState(null);
   const [scannerActive, setScannerActive] = useState(false);
-  const [manualBarcode, setManualBarcode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [configBarcode, setConfigBarcode] = useState(null); // otwiera ekran konfiguracji
+  const [scanned, setScanned] = useState([]); // { barcode, store_id, store_name, ts }
   const [toast, setToast] = useState('');
-  const lastScanned = useRef('');
-  const scanTimeout = useRef(null);
+
+  function showToast(msg) { setToast(msg); setTimeout(()=>setToast(''),2000); }
+
+  function handleDetected(bc) {
+    if (!selectedStore) { showToast('⚠ Wybierz sklep przed skanowaniem'); return; }
+    setScanned(prev => {
+      if (prev.some(x=>x.barcode===bc && x.store_id===selectedStore)) { showToast('Już zeskanowano'); return prev; }
+      const storeName = stores.find(s=>s.id===selectedStore)?.name || '';
+      const saved = [...prev, { barcode:bc, store_id:selectedStore, store_name:storeName, ts:Date.now() }];
+      // Zapisz do localStorage (merguj z istniejącymi)
+      const existing = JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
+      const merged = [...existing.filter(x=>!(x.barcode===bc&&x.store_id===selectedStore)), { barcode:bc, store_id:selectedStore, store_name:storeName, ts:Date.now() }];
+      localStorage.setItem(SAVED_KEY, JSON.stringify(merged));
+      showToast(`✓ ${bc}`);
+      return saved;
+    });
+  }
+
+  const activeStores = stores.filter(s=>s.status!=='deleted');
+
+  return (
+    <div style={{minHeight:'100vh',background:'var(--bg)'}}>
+      <Toast msg={toast}/>
+      <div className="header">
+        <div className="header-top">
+          <button className="back-btn" onClick={onBack} style={{marginRight:8}}>←</button>
+          <div className="logo-icon">📦</div>
+          <div><div className="logo-text">NutriCart</div><div className="logo-sub">Skanowanie wielu</div></div>
+        </div>
+      </div>
+      <div className="screen">
+        <div className="section-label">Sklep</div>
+        <div className="store-grid" style={{marginBottom:20}}>
+          {activeStores.map(s=>(
+            <button key={s.id} className={`store-btn ${selectedStore===s.id?'active':''}`}
+              onClick={()=>setSelectedStore(s.id)}>
+              {selectedStore===s.id?'✓ ':''}{s.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="bulk-counter">
+          <div className="bulk-count">{scanned.length}</div>
+          <div className="bulk-label">kodów zeskanowanych</div>
+        </div>
+
+        <BarcodeScanner active={scannerActive} onDetected={handleDetected} continuous={true}/>
+        <button className="btn-primary" onClick={()=>setScannerActive(v=>!v)}>
+          {scannerActive?'⏹ Zatrzymaj skaner':'📷 Uruchom skaner'}
+        </button>
+
+        {scanned.length > 0 && (
+          <>
+            <div className="section-label" style={{marginTop:16}}>Ostatnie</div>
+            {[...scanned].reverse().slice(0,5).map((x,i)=>(
+              <div key={i} className="barcode-row">
+                <div>
+                  <div className="barcode-code">{x.barcode}</div>
+                  <div className="barcode-store">{x.store_name}</div>
+                </div>
+              </div>
+            ))}
+            <button className="btn-secondary" onClick={()=>{ setScanned([]); showToast('Lista wyczyszczona'); }}>
+              🗑 Wyczyść sesję
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── SavedBarcodesScreen ───────────────────────────────────────────────────────
+
+function SavedBarcodesScreen({ stores, onBack }) {
+  const [items, setItems] = useState([]);
+  const [filterStore, setFilterStore] = useState('all');
+  const [configBarcode, setConfigBarcode] = useState(null);
+  const [configStoreId, setConfigStoreId] = useState(null);
+  const [toast, setToast] = useState('');
+
+  function showToast(msg) { setToast(msg); setTimeout(()=>setToast(''),2500); }
 
   useEffect(() => {
-    fetch(`${API_URL}/stores`).then(r => r.json()).then(setStores)
-      .catch(() => showToast('Błąd ładowania sklepów'));
+    const saved = JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
+    setItems(saved);
   }, []);
 
-  function showToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(''), 2500);
+  function removeItem(barcode, store_id) {
+    const updated = items.filter(x=>!(x.barcode===barcode&&x.store_id===store_id));
+    setItems(updated);
+    localStorage.setItem(SAVED_KEY, JSON.stringify(updated));
   }
 
-  function openConfig(barcode) {
-    setScannerActive(false);
-    setConfigBarcode(barcode);
+  const storeGroups = [...new Set(items.map(x=>x.store_id))];
+  const filtered = filterStore==='all' ? items : items.filter(x=>x.store_id===Number(filterStore));
+
+  if (configBarcode) return (
+    <ConfigScreen barcode={configBarcode} stores={stores}
+      onSaved={(status)=>{
+        removeItem(configBarcode, configStoreId);
+        setConfigBarcode(null);
+        showToast(status==='created'?'✓ Dodano!':'✓ Zaktualizowano!');
+      }}
+      onBack={()=>setConfigBarcode(null)}/>
+  );
+
+  return (
+    <div style={{minHeight:'100vh',background:'var(--bg)'}}>
+      <Toast msg={toast}/>
+      <div className="header">
+        <div className="header-top">
+          <button className="back-btn" onClick={onBack} style={{marginRight:8}}>←</button>
+          <div className="logo-icon">🗂</div>
+          <div><div className="logo-text">NutriCart</div><div className="logo-sub">Zapisane kody</div></div>
+        </div>
+      </div>
+      <div className="screen">
+        {items.length === 0 ? (
+          <div style={{textAlign:'center',padding:'60px 20px',color:'var(--muted)'}}>
+            <div style={{fontSize:48,marginBottom:12}}>📭</div>
+            <div style={{fontSize:14}}>Brak zapisanych kodów.<br/>Użyj "Skanowanie wielu" aby zapisać kody z sesji.</div>
+          </div>
+        ) : (
+          <>
+            <div className="filter-bar">
+              <button className={`filter-chip ${filterStore==='all'?'active':''}`} onClick={()=>setFilterStore('all')}>
+                Wszystkie ({items.length})
+              </button>
+              {storeGroups.map(sid=>{
+                const s = stores.find(x=>x.id===sid);
+                const cnt = items.filter(x=>x.store_id===sid).length;
+                return <button key={sid} className={`filter-chip ${filterStore===String(sid)?'active':''}`}
+                  onClick={()=>setFilterStore(String(sid))}>{s?.name||sid} ({cnt})</button>;
+              })}
+            </div>
+
+            {filtered.map((x,i)=>(
+              <div key={i} className="barcode-row">
+                <div style={{flex:1}}>
+                  <div className="barcode-code">{x.barcode}</div>
+                  <div className="barcode-store">{x.store_name} · {new Date(x.ts).toLocaleDateString('pl-PL')}</div>
+                </div>
+                <div style={{display:'flex',gap:6}}>
+                  <button className="add-btn-sm" onClick={()=>{ setConfigStoreId(x.store_id); setConfigBarcode(x.barcode); }}>
+                    + Dodaj
+                  </button>
+                  <button className="add-btn-sm" style={{borderColor:'var(--red)',color:'var(--red)',background:'rgba(248,113,113,0.08)'}}
+                    onClick={()=>{ removeItem(x.barcode, x.store_id); showToast('Usunięto'); }}>
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── ProductsScreen — przeglądanie i modyfikacje ───────────────────────────────
+
+function ProductsScreen({ stores, onBack }) {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStore, setFilterStore] = useState('all');
+  const [editProduct, setEditProduct] = useState(null); // { id, status, is_ready_to_eat, store_ids }
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState('');
+
+  function showToast(msg) { setToast(msg); setTimeout(()=>setToast(''),2500); }
+
+  useEffect(()=>{ loadProducts(); }, []);
+
+  async function loadProducts() {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/products`);
+      const data = await res.json();
+      setProducts(data);
+    } catch(e) {}
+    finally { setLoading(false); }
   }
 
-  function handleBarcode(barcode) {
-    if (barcode === lastScanned.current) return;
-    lastScanned.current = barcode;
-    clearTimeout(scanTimeout.current);
-    scanTimeout.current = setTimeout(() => { lastScanned.current = ''; }, 3000);
-    openConfig(barcode);
+  async function saveEdit() {
+    setSaving(true);
+    try {
+      // Aktualizuj status i is_ready_to_eat
+      await fetch(`${API}/products/${editProduct.id}/quick-update`, {
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ status: editProduct.status, is_ready_to_eat: editProduct.is_ready_to_eat })
+      });
+      // Aktualizuj sklepy przez PUT
+      const existing = products.find(p=>p.id===editProduct.id);
+      await fetch(`${API}/products/${editProduct.id}`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ ...existing, store_ids: editProduct.store_ids })
+      });
+      await loadProducts();
+      setEditProduct(null);
+      showToast('✓ Zapisano');
+    } catch(e) { showToast('Błąd zapisu'); }
+    finally { setSaving(false); }
   }
 
-  function handleManual() {
-    if (!manualBarcode.trim()) return;
-    openConfig(manualBarcode.trim());
-  }
+  const filtered = products.filter(p => {
+    if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && !(p.brand||'').toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterStatus !== 'all' && p.status !== filterStatus) return false;
+    if (filterStore !== 'all' && !(p.store_ids||[]).includes(Number(filterStore))) return false;
+    return true;
+  });
 
-  function handleSaved(status, product) {
-    setConfigBarcode(null);
-    setManualBarcode('');
-    showToast(status === 'created' ? '✓ Produkt dodany!' : '✓ Zmiany zapisane!');
-  }
-
-  // Ekran konfiguracji
-  if (configBarcode) {
+  if (editProduct) {
+    const storeList = stores.filter(s=>s.status!=='deleted');
     return (
-      <ConfigScreen
-        barcode={configBarcode}
-        stores={stores}
-        onSaved={handleSaved}
-        onBack={() => { setConfigBarcode(null); }}
-      />
+      <div style={{minHeight:'100vh',background:'var(--bg)'}}>
+        <Toast msg={toast}/>
+        <div className="header">
+          <div className="header-top">
+            <button className="back-btn" onClick={()=>setEditProduct(null)} style={{marginRight:8}}>←</button>
+            <div className="logo-icon">✏️</div>
+            <div><div className="logo-text">NutriCart</div><div className="logo-sub">Edytuj produkt</div></div>
+          </div>
+        </div>
+        <div className="screen">
+          <div style={{fontFamily:'Syne',fontSize:18,fontWeight:700,marginBottom:4}}>{editProduct.name}</div>
+          {editProduct.brand&&<div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>{editProduct.brand}</div>}
+
+          <div className="section-label">Sklepy</div>
+          <div className="store-grid" style={{marginBottom:24}}>
+            {storeList.map(s=>(
+              <button key={s.id} className={`store-btn ${(editProduct.store_ids||[]).includes(s.id)?'active':''}`}
+                onClick={()=>setEditProduct(prev=>({...prev, store_ids: (prev.store_ids||[]).includes(s.id) ? prev.store_ids.filter(x=>x!==s.id) : [...(prev.store_ids||[]),s.id]}))}>
+                {(editProduct.store_ids||[]).includes(s.id)?'✓ ':''}{s.name}
+              </button>
+            ))}
+          </div>
+
+          <div className="section-label">Gotowy do spożycia?</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:24}}>
+            {[{v:1,l:'✅ Tak'},{v:0,l:'🍳 Nie'},{v:null,l:'❓ Nie wiem'}].map(opt=>(
+              <button key={String(opt.v)} onClick={()=>setEditProduct(prev=>({...prev,is_ready_to_eat:opt.v}))}
+                style={{padding:'10px 6px',borderRadius:12,border:'none',cursor:'pointer',
+                  background:editProduct.is_ready_to_eat===opt.v?'rgba(34,211,238,0.12)':'var(--surface)',
+                  outline:editProduct.is_ready_to_eat===opt.v?'2px solid var(--accent)':'1px solid var(--border)',
+                  color:editProduct.is_ready_to_eat===opt.v?'var(--accent)':'var(--muted)',textAlign:'center'}}>
+                <div style={{fontSize:13,fontWeight:600}}>{opt.l}</div>
+              </button>
+            ))}
+          </div>
+
+          <div className="section-label">Status</div>
+          <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:28}}>
+            {[
+              {v:'active',l:'🟢 Aktywny'},
+              {v:'inactive_incomplete',l:'🔴 Nieaktywny — niekompletny'},
+              {v:'inactive_deleted',l:'⚫ Nieaktywny — usunięty'},
+            ].map(opt=>(
+              <button key={opt.v} onClick={()=>setEditProduct(prev=>({...prev,status:opt.v}))}
+                style={{padding:'12px',borderRadius:12,border:'none',cursor:'pointer',textAlign:'left',
+                  background:editProduct.status===opt.v?'rgba(34,211,238,0.08)':'var(--surface)',
+                  outline:editProduct.status===opt.v?'2px solid var(--accent)':'1px solid var(--border)',
+                  color:editProduct.status===opt.v?'var(--text)':'var(--muted)',fontSize:14,fontWeight:editProduct.status===opt.v?600:400}}>
+                {opt.l}
+              </button>
+            ))}
+          </div>
+
+          <button className="btn-primary" onClick={saveEdit} disabled={saving}>{saving?'Zapisuję...':'💾 Zapisz zmiany'}</button>
+          <button className="btn-secondary" onClick={()=>setEditProduct(null)}>Anuluj</button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div>
-      {toast && <div className="toast">{toast}</div>}
-
+    <div style={{minHeight:'100vh',background:'var(--bg)'}}>
+      <Toast msg={toast}/>
       <div className="header">
         <div className="header-top">
-          <div className="logo-icon">📡</div>
-          <div>
-            <div className="logo-text">NutriCart</div>
-            <div className="logo-sub">Product Scanner</div>
-          </div>
+          <button className="back-btn" onClick={onBack} style={{marginRight:8}}>←</button>
+          <div className="logo-icon">🗄</div>
+          <div><div className="logo-text">NutriCart</div><div className="logo-sub">Produkty ({filtered.length})</div></div>
         </div>
       </div>
-
       <div className="screen">
-        <div className="section-label">Skanowanie</div>
-        <BarcodeScanner active={scannerActive} onDetected={handleBarcode} />
+        <input className="search-input" placeholder="🔍 Szukaj po nazwie lub marce..." value={search} onChange={e=>setSearch(e.target.value)}/>
 
-        <button className="btn-primary"
-          onClick={() => setScannerActive(!scannerActive)}>
-          {scannerActive ? '⏹ Zatrzymaj skaner' : '📷 Uruchom skaner'}
-        </button>
-
-        <div className="manual-input-wrap">
-          <input className="manual-input" type="text" inputMode="numeric"
-            placeholder="lub wpisz kod kreskowy..."
-            value={manualBarcode}
-            onChange={e => setManualBarcode(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleManual()} />
-          <button className="manual-btn" onClick={handleManual}
-            disabled={!manualBarcode.trim()}>→</button>
+        <div className="filter-bar">
+          {[['all','Wszystkie'],['active','Aktywne'],['inactive_incomplete','Niekompletne'],['inactive_deleted','Usunięte']].map(([v,l])=>(
+            <button key={v} className={`filter-chip ${filterStatus===v?'active':''}`} onClick={()=>setFilterStatus(v)}>{l}</button>
+          ))}
         </div>
 
-        {loading && <div className="loading-dots"><span/><span/><span/></div>}
+        <div className="filter-bar">
+          <button className={`filter-chip ${filterStore==='all'?'active':''}`} onClick={()=>setFilterStore('all')}>Wszystkie sklepy</button>
+          {stores.map(s=>(
+            <button key={s.id} className={`filter-chip ${filterStore===String(s.id)?'active':''}`}
+              onClick={()=>setFilterStore(String(s.id))}>{s.name}</button>
+          ))}
+        </div>
+
+        {loading ? <Dots/> : filtered.length === 0 ? (
+          <div style={{textAlign:'center',padding:'40px 0',color:'var(--muted)',fontSize:14}}>Brak wyników</div>
+        ) : (
+          filtered.map(p=>(
+            <div key={p.id} className="product-row" onClick={()=>setEditProduct({...p})}>
+              {p.image_url ? <img className="product-row-img" src={p.image_url} alt={p.name} style={{width:44,height:44,borderRadius:10,objectFit:'contain',background:'var(--surface2)'}}/>
+                : <div className="product-row-img">🥫</div>}
+              <div className="product-row-info">
+                <div className="product-row-name">{p.name}</div>
+                <div className="product-row-meta">
+                  {p.brand&&<>{p.brand} · </>}
+                  {p.calories_per_100g&&<>{Math.round(p.calories_per_100g)} kcal · </>}
+                  {p.category||'inne'}
+                </div>
+              </div>
+              <StatusBadge status={p.status}/>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);</script>
+// ── StoresScreen ──────────────────────────────────────────────────────────────
+
+function StoresScreen({ stores, reloadStores, onBack }) {
+  const [name, setName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState('');
+
+  function showToast(msg) { setToast(msg); setTimeout(()=>setToast(''),2000); }
+
+  async function addStore() {
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      await fetch(`${API}/stores`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name:name.trim()}) });
+      setName(''); reloadStores(); showToast('✓ Sklep dodany');
+    } catch(e) { showToast('Błąd'); }
+    finally { setSaving(false); }
+  }
+
+  async function toggleStatus(store) {
+    const next = store.status === 'active' ? 'inactive' : store.status === 'inactive' ? 'deleted' : 'active';
+    await fetch(`${API}/stores/${store.id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({status:next}) });
+    reloadStores();
+  }
+
+  const statusLabel = { active:'🟢 Aktywny', inactive:'🔴 Nieaktywny', deleted:'⚫ Usunięty' };
+  const nextLabel = { active:'→ Dezaktywuj', inactive:'→ Usuń', deleted:'→ Aktywuj' };
+
+  return (
+    <div style={{minHeight:'100vh',background:'var(--bg)'}}>
+      <Toast msg={toast}/>
+      <div className="header">
+        <div className="header-top">
+          <button className="back-btn" onClick={onBack} style={{marginRight:8}}>←</button>
+          <div className="logo-icon">🏪</div>
+          <div><div className="logo-text">NutriCart</div><div className="logo-sub">Sklepy</div></div>
+        </div>
+      </div>
+      <div className="screen">
+        <div className="section-label">Dodaj nowy sklep</div>
+        <div className="manual-input-wrap" style={{marginBottom:24}}>
+          <input className="manual-input" placeholder="Nazwa sklepu..." value={name}
+            onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addStore()}/>
+          <button className="manual-btn" onClick={addStore} disabled={saving||!name.trim()}>+</button>
+        </div>
+
+        <div className="section-label">Wszystkie sklepy</div>
+        {stores.map(s=>(
+          <div key={s.id} className="store-row">
+            <div>
+              <div className="store-row-name">{s.name}</div>
+              <div style={{fontSize:12,color:'var(--muted)',marginTop:3}}>{statusLabel[s.status]||s.status}</div>
+            </div>
+            <button className="add-btn-sm" onClick={()=>toggleStatus(s)}>{nextLabel[s.status]}</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Main Menu ─────────────────────────────────────────────────────────────────
+
+const MENU = [
+  { id:'single',  icon:'📷', title:'Skanowanie produktu',    sub:'Skanuj i od razu konfiguruj' },
+  { id:'bulk',    icon:'📦', title:'Skanowanie wielu',        sub:'Zapisuj kody na później' },
+  { id:'products',icon:'🗄', title:'Produkty',               sub:'Przeglądaj i modyfikuj' },
+  { id:'saved',   icon:'🗂', title:'Zapisane kody',           sub:'Z poprzednich sesji' },
+  { id:'stores',  icon:'🏪', title:'Sklepy',                  sub:'Zarządzaj sklepami' },
+];
+
+function App() {
+  const [screen, setScreen] = useState('menu');
+  const [stores, reloadStores] = useStores();
+
+  const screenProps = { stores, onBack:()=>setScreen('menu') };
+
+  if (screen === 'single')   return <SingleScanScreen {...screenProps}/>;
+  if (screen === 'bulk')     return <BulkScanScreen {...screenProps}/>;
+  if (screen === 'products') return <ProductsScreen {...screenProps}/>;
+  if (screen === 'saved')    return <SavedBarcodesScreen {...screenProps}/>;
+  if (screen === 'stores')   return <StoresScreen {...screenProps} reloadStores={reloadStores}/>;
+
+  return (
+    <div style={{minHeight:'100vh',background:'var(--bg)'}}>
+      <div className="header">
+        <div className="header-top">
+          <div className="logo-icon">📡</div>
+          <div><div className="logo-text">NutriCart</div><div className="logo-sub">Product Scanner</div></div>
+        </div>
+      </div>
+      <div className="menu-grid">
+        {MENU.map(m=>(
+          <button key={m.id} className="menu-card" onClick={()=>setScreen(m.id)}>
+            <div className="menu-card-icon">{m.icon}</div>
+            <div className="menu-card-title">{m.title}</div>
+            <div className="menu-card-sub">{m.sub}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
 </body>
 </html>
