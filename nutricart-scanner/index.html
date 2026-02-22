@@ -726,6 +726,316 @@
       color: var(--muted);
       margin-top: 6px;
     }
+
+    /* ── Meal Planner (desktop-first) ── */
+    @media (min-width: 768px) {
+      #root { max-width: 100%; }
+    }
+
+    .planner-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 0;
+      height: calc(100vh - 65px);
+    }
+
+    @media (max-width: 767px) {
+      .planner-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+
+    .planner-left {
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .planner-right {
+      overflow-y: auto;
+      padding: 24px;
+      background: rgba(10, 15, 30, 0.6);
+    }
+
+    .planner-input {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .planner-input:focus { border-color: var(--accent); }
+    .planner-input::placeholder { color: var(--muted); font-weight: 400; font-size: 15px; font-family: 'DM Sans', sans-serif; }
+
+    .planner-meal-type {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .meal-type-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .meal-type-btn.active {
+      border-color: var(--accent2);
+      background: rgba(167,139,250,0.12);
+      color: var(--accent2);
+      font-weight: 600;
+    }
+
+    /* Ingredient row in planner */
+    .ingredient-row {
+      display: grid;
+      grid-template-columns: 1fr 80px 90px 32px;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(30,58,95,0.4);
+      animation: slideUp 0.2s ease;
+    }
+
+    .ingredient-select {
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+      cursor: pointer;
+    }
+    .ingredient-select:focus { border-color: var(--accent); }
+
+    .ingredient-qty {
+      padding: 9px 10px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+      text-align: right;
+    }
+    .ingredient-qty:focus { border-color: var(--accent); }
+
+    .ingredient-unit {
+      padding: 9px 8px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      outline: none;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .remove-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: 1px solid rgba(248,113,113,0.2);
+      background: rgba(248,113,113,0.06);
+      color: var(--red);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .remove-btn:hover { background: rgba(248,113,113,0.15); }
+
+    /* Nutrition summary panel */
+    .nutrition-hero {
+      background: linear-gradient(135deg, rgba(34,211,238,0.08), rgba(167,139,250,0.08));
+      border: 1px solid rgba(34,211,238,0.15);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .nutrition-hero-kcal {
+      font-family: 'Syne', sans-serif;
+      font-size: 64px;
+      font-weight: 800;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nutrition-hero-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .macro-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .macro-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .macro-card-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 22px;
+      font-weight: 500;
+    }
+
+    .macro-card-lbl {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 3px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Micro nutrients table */
+    .micro-section {
+      background: var(--surface);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .micro-section-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      padding: 12px 16px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .micro-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      border-bottom: 1px solid rgba(30,58,95,0.3);
+      font-size: 13px;
+    }
+    .micro-row:last-child { border-bottom: none; }
+
+    .micro-name { color: var(--muted); }
+    .micro-val { font-family: 'DM Mono', monospace; color: var(--text); }
+
+    .micro-bar-wrap {
+      width: 60px;
+      height: 4px;
+      background: var(--surface2);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-left: 12px;
+      flex-shrink: 0;
+    }
+    .micro-bar {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 0.4s ease;
+    }
+
+    /* Ingredient summary rows */
+    .ingr-summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 8px 16px;
+      border-bottom: 1px solid rgba(30,58,95,0.3);
+      font-size: 12px;
+      gap: 8px;
+    }
+    .ingr-summary-row:last-child { border-bottom: none; }
+
+    .save-meal-btn {
+      width: 100%;
+      padding: 15px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent2), #7c3aed);
+      color: white;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+      margin-top: 8px;
+    }
+    .save-meal-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .save-meal-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(167,139,250,0.3); }
+
+    .planner-section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 10px;
+    }
+
+    .add-ingredient-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px dashed var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 8px;
+    }
+    .add-ingredient-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .dietary-flags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .dietary-flag {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .dietary-flag.yes { background: rgba(74,222,128,0.12); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+    .dietary-flag.no  { background: rgba(248,113,113,0.08); color: var(--muted); border: 1px solid rgba(30,58,95,0.4); text-decoration: line-through; }
 </style>
 </head>
 <body>
@@ -775,6 +1085,21 @@ function BackBtn({ onBack, label = '← Wróć' }) {
     <button className="back-btn" onClick={onBack}>
       <span style={{fontSize:18}}>←</span> {label}
     </button>
+  );
+}
+
+function Header({ icon, sub, onBack, onHome }) {
+  return (
+    <div className="header">
+      <div className="header-top">
+        {onBack && <button className="back-btn" onClick={onBack} style={{marginRight:8}}>←</button>}
+        <div className="logo-icon" onClick={onHome} style={{cursor:onHome?'pointer':'default'}}>{icon}</div>
+        <div onClick={onHome} style={{cursor:onHome?'pointer':'default'}}>
+          <div className="logo-text">NutriCart</div>
+          {sub && <div className="logo-sub">{sub}</div>}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -860,7 +1185,7 @@ function BarcodeScanner({ active, onDetected, continuous = false }) {
 
 // ── ConfigScreen ──────────────────────────────────────────────────────────────
 
-function ConfigScreen({ barcode, stores, onSaved, onBack }) {
+function ConfigScreen({ barcode, stores, onSaved, onBack, onHome }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -869,8 +1194,17 @@ function ConfigScreen({ barcode, stores, onSaved, onBack }) {
   const [selectedStores, setSelectedStores] = useState([]);
   const [readyToEat, setReadyToEat] = useState(null);
   const [activate, setActivate] = useState(false);
+  const [genericProductId, setGenericProductId] = useState(null);
+  const [genericProducts, setGenericProducts] = useState([]);
 
-  useEffect(() => { load(); }, [barcode]);
+  useEffect(() => { load(); loadGenerics(); }, [barcode]);
+
+  async function loadGenerics() {
+    try {
+      const res = await fetch(`${API}/products/generic`);
+      setGenericProducts(await res.json());
+    } catch(e) {}
+  }
 
   async function load() {
     setLoading(true); setError('');
@@ -888,6 +1222,7 @@ function ConfigScreen({ barcode, stores, onSaved, onBack }) {
         setSelectedStores(p.store_ids || []);
         setReadyToEat(p.is_ready_to_eat === 1 ? true : p.is_ready_to_eat === 0 ? false : null);
         setActivate(p.status === 'active');
+        setGenericProductId(p.generic_product_id || null);
       }
     } catch(e) { setError('Błąd połączenia'); }
     finally { setLoading(false); }
@@ -902,7 +1237,8 @@ function ConfigScreen({ barcode, stores, onSaved, onBack }) {
     try {
       const body = { ...preview, store_ids: selectedStores,
         status: activate ? 'active' : 'inactive_incomplete',
-        is_ready_to_eat: readyToEat === null ? null : (readyToEat ? 1 : 0) };
+        is_ready_to_eat: readyToEat === null ? null : (readyToEat ? 1 : 0),
+        generic_product_id: genericProductId || null };
       const res = await fetch(`${API}/scan/${barcode}`, {
         method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
       });
@@ -917,16 +1253,7 @@ function ConfigScreen({ barcode, stores, onSaved, onBack }) {
 
   return (
     <div style={{minHeight:'100vh',background:'var(--bg)'}}>
-      <div className="header">
-        <div className="header-top">
-          <button className="back-btn" onClick={onBack} style={{marginRight:8}}>←</button>
-          <div className="logo-icon">{isNew?'➕':'✏️'}</div>
-          <div>
-            <div className="logo-text">NutriCart</div>
-            <div className="logo-sub">{isNew?'Nowy produkt':'Edytuj produkt'}</div>
-          </div>
-        </div>
-      </div>
+      <Header icon={isNew?'➕':'✏️'} sub={isNew?'Nowy produkt':'Edytuj produkt'} onBack={onBack} onHome={onHome}/>
       <div className="screen">
         {error && <div style={{background:'rgba(248,113,113,0.1)',border:'1px solid var(--red)',borderRadius:12,padding:12,marginBottom:16,color:'var(--red)',fontSize:13}}>{error}</div>}
         {preview && (
@@ -975,6 +1302,20 @@ function ConfigScreen({ barcode, stores, onSaved, onBack }) {
           ))}
         </div>
 
+        <div className="section-label">Produkt generyczny (opcjonalnie)</div>
+        <select className="ingredient-unit" style={{width:'100%',padding:'11px 12px',borderRadius:12,marginBottom:20,fontSize:13}}
+          value={genericProductId||''} onChange={e=>setGenericProductId(e.target.value?Number(e.target.value):null)}>
+          <option value=''>— brak powiązania —</option>
+          {genericProducts.map(g=>(
+            <option key={g.id} value={g.id}>{g.name} ({g.category})</option>
+          ))}
+        </select>
+        {genericProductId && (
+          <div style={{fontSize:11,color:'var(--muted)',marginTop:-14,marginBottom:16,paddingLeft:4}}>
+            ⚠ Ten produkt nie będzie brany do generowania jadłospisu — zamiast niego używany jest szablon generyczny
+          </div>
+        )}
+
         <div className="section-label">Status</div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:28}}>
           {[{val:true,label:'🟢 Aktywny',sub:'widoczny w planach'},{val:false,label:'🔴 Nieaktywny',sub:'wymaga uzupełnienia'}].map(opt=>(
@@ -1000,7 +1341,7 @@ function ConfigScreen({ barcode, stores, onSaved, onBack }) {
 
 // ── SingleScanScreen ──────────────────────────────────────────────────────────
 
-function SingleScanScreen({ stores, onBack }) {
+function SingleScanScreen({ stores, onBack, onHome }) {
   const [scannerActive, setScannerActive] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [configBarcode, setConfigBarcode] = useState(null);
@@ -1013,19 +1354,13 @@ function SingleScanScreen({ stores, onBack }) {
   if (configBarcode) return (
     <ConfigScreen barcode={configBarcode} stores={stores}
       onSaved={(s)=>{ setConfigBarcode(null); setManualCode(''); showToast(s==='created'?'✓ Dodano!':'✓ Zapisano!'); }}
-      onBack={()=>setConfigBarcode(null)} />
+      onBack={()=>setConfigBarcode(null)} onHome={onHome}/>
   );
 
   return (
     <div style={{minHeight:'100vh',background:'var(--bg)'}}>
       <Toast msg={toast}/>
-      <div className="header">
-        <div className="header-top">
-          <button className="back-btn" onClick={onBack} style={{marginRight:8}}>←</button>
-          <div className="logo-icon">📷</div>
-          <div><div className="logo-text">NutriCart</div><div className="logo-sub">Skanowanie produktu</div></div>
-        </div>
-      </div>
+      <Header icon='📷' sub='Skanowanie produktu' onBack={onBack} onHome={onHome}/>
       <div className="screen">
         <BarcodeScanner active={scannerActive} onDetected={openConfig}/>
         <button className="btn-primary" onClick={()=>setScannerActive(v=>!v)}>
@@ -1046,7 +1381,7 @@ function SingleScanScreen({ stores, onBack }) {
 
 const SAVED_KEY = 'nutricart_saved_barcodes';
 
-function BulkScanScreen({ stores, onBack }) {
+function BulkScanScreen({ stores, onBack, onHome }) {
   const [selectedStore, setSelectedStore] = useState(null);
   const [scannerActive, setScannerActive] = useState(false);
   const [scanned, setScanned] = useState([]); // { barcode, store_id, store_name, ts }
@@ -1074,13 +1409,7 @@ function BulkScanScreen({ stores, onBack }) {
   return (
     <div style={{minHeight:'100vh',background:'var(--bg)'}}>
       <Toast msg={toast}/>
-      <div className="header">
-        <div className="header-top">
-          <button className="back-btn" onClick={onBack} style={{marginRight:8}}>←</button>
-          <div className="logo-icon">📦</div>
-          <div><div className="logo-text">NutriCart</div><div className="logo-sub">Skanowanie wielu</div></div>
-        </div>
-      </div>
+      <Header icon='📦' sub='Skanowanie wielu' onBack={onBack} onHome={onHome}/>
       <div className="screen">
         <div className="section-label">Sklep</div>
         <div className="store-grid" style={{marginBottom:20}}>
@@ -1125,7 +1454,7 @@ function BulkScanScreen({ stores, onBack }) {
 
 // ── SavedBarcodesScreen ───────────────────────────────────────────────────────
 
-function SavedBarcodesScreen({ stores, onBack }) {
+function SavedBarcodesScreen({ stores, onBack, onHome }) {
   const [items, setItems] = useState([]);
   const [filterStore, setFilterStore] = useState('all');
   const [configBarcode, setConfigBarcode] = useState(null);
@@ -1155,19 +1484,13 @@ function SavedBarcodesScreen({ stores, onBack }) {
         setConfigBarcode(null);
         showToast(status==='created'?'✓ Dodano!':'✓ Zaktualizowano!');
       }}
-      onBack={()=>setConfigBarcode(null)}/>
+      onBack={()=>setConfigBarcode(null)} onHome={onHome}/>
   );
 
   return (
     <div style={{minHeight:'100vh',background:'var(--bg)'}}>
       <Toast msg={toast}/>
-      <div className="header">
-        <div className="header-top">
-          <button className="back-btn" onClick={onBack} style={{marginRight:8}}>←</button>
-          <div className="logo-icon">🗂</div>
-          <div><div className="logo-text">NutriCart</div><div className="logo-sub">Zapisane kody</div></div>
-        </div>
-      </div>
+      <Header icon='🗂' sub='Zapisane kody' onBack={onBack} onHome={onHome}/>
       <div className="screen">
         {items.length === 0 ? (
           <div style={{textAlign:'center',padding:'60px 20px',color:'var(--muted)'}}>
@@ -1214,7 +1537,7 @@ function SavedBarcodesScreen({ stores, onBack }) {
 
 // ── ProductsScreen — przeglądanie i modyfikacje ───────────────────────────────
 
-function ProductsScreen({ stores, onBack }) {
+function ProductsScreen({ stores, onBack, onHome }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -1271,13 +1594,7 @@ function ProductsScreen({ stores, onBack }) {
     return (
       <div style={{minHeight:'100vh',background:'var(--bg)'}}>
         <Toast msg={toast}/>
-        <div className="header">
-          <div className="header-top">
-            <button className="back-btn" onClick={()=>setEditProduct(null)} style={{marginRight:8}}>←</button>
-            <div className="logo-icon">✏️</div>
-            <div><div className="logo-text">NutriCart</div><div className="logo-sub">Edytuj produkt</div></div>
-          </div>
-        </div>
+        <Header icon='✏️' sub='Edytuj produkt' onBack={()=>setEditProduct(null)} onHome={onHome}/>
         <div className="screen">
           <div style={{fontFamily:'Syne',fontSize:18,fontWeight:700,marginBottom:4}}>{editProduct.name}</div>
           {editProduct.brand&&<div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>{editProduct.brand}</div>}
@@ -1305,7 +1622,21 @@ function ProductsScreen({ stores, onBack }) {
             ))}
           </div>
 
-          <div className="section-label">Status</div>
+          <div className="section-label">Produkt generyczny (opcjonalnie)</div>
+        <select className="ingredient-unit" style={{width:'100%',padding:'11px 12px',borderRadius:12,marginBottom:20,fontSize:13}}
+          value={genericProductId||''} onChange={e=>setGenericProductId(e.target.value?Number(e.target.value):null)}>
+          <option value=''>— brak powiązania —</option>
+          {genericProducts.map(g=>(
+            <option key={g.id} value={g.id}>{g.name} ({g.category})</option>
+          ))}
+        </select>
+        {genericProductId && (
+          <div style={{fontSize:11,color:'var(--muted)',marginTop:-14,marginBottom:16,paddingLeft:4}}>
+            ⚠ Ten produkt nie będzie brany do generowania jadłospisu — zamiast niego używany jest szablon generyczny
+          </div>
+        )}
+
+        <div className="section-label">Status</div>
           <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:28}}>
             {[
               {v:'active',l:'🟢 Aktywny'},
@@ -1332,13 +1663,7 @@ function ProductsScreen({ stores, onBack }) {
   return (
     <div style={{minHeight:'100vh',background:'var(--bg)'}}>
       <Toast msg={toast}/>
-      <div className="header">
-        <div className="header-top">
-          <button className="back-btn" onClick={onBack} style={{marginRight:8}}>←</button>
-          <div className="logo-icon">🗄</div>
-          <div><div className="logo-text">NutriCart</div><div className="logo-sub">Produkty ({filtered.length})</div></div>
-        </div>
-      </div>
+      <Header icon='🗄' sub={`Produkty (${filtered.length})`} onBack={onBack} onHome={onHome}/>
       <div className="screen">
         <input className="search-input" placeholder="🔍 Szukaj po nazwie lub marce..." value={search} onChange={e=>setSearch(e.target.value)}/>
 
@@ -1382,7 +1707,7 @@ function ProductsScreen({ stores, onBack }) {
 
 // ── StoresScreen ──────────────────────────────────────────────────────────────
 
-function StoresScreen({ stores, reloadStores, onBack }) {
+function StoresScreen({ stores, reloadStores, onBack, onHome }) {
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
@@ -1411,13 +1736,7 @@ function StoresScreen({ stores, reloadStores, onBack }) {
   return (
     <div style={{minHeight:'100vh',background:'var(--bg)'}}>
       <Toast msg={toast}/>
-      <div className="header">
-        <div className="header-top">
-          <button className="back-btn" onClick={onBack} style={{marginRight:8}}>←</button>
-          <div className="logo-icon">🏪</div>
-          <div><div className="logo-text">NutriCart</div><div className="logo-sub">Sklepy</div></div>
-        </div>
-      </div>
+      <Header icon='🏪' sub='Sklepy' onBack={onBack} onHome={onHome}/>
       <div className="screen">
         <div className="section-label">Dodaj nowy sklep</div>
         <div className="manual-input-wrap" style={{marginBottom:24}}>
@@ -1443,34 +1762,645 @@ function StoresScreen({ stores, reloadStores, onBack }) {
 
 // ── Main Menu ─────────────────────────────────────────────────────────────────
 
+
+// ── MealPlannerScreen ─────────────────────────────────────────────────────────
+
+const MEAL_TYPES = ['breakfast','lunch','dinner','snack'];
+const MEAL_TYPE_LABELS = { breakfast:'Śniadanie', lunch:'Obiad', dinner:'Kolacja', snack:'Przekąska' };
+const UNITS = ['g','ml','piece','tbsp','tsp','cup'];
+const UNIT_LABELS = { g:'g', ml:'ml', piece:'szt', tbsp:'łyżka', tsp:'łyżeczka', cup:'szklanka' };
+
+function gramsForUnit(unit, qty, servingWeightG) {
+  if (unit === 'piece') return qty * (servingWeightG || 100);
+  if (unit === 'tbsp')  return qty * 14;
+  if (unit === 'tsp')   return qty * 5;
+  if (unit === 'cup')   return qty * 240;
+  return qty; // g or ml
+}
+
+function calcNutrient(product, field, grams) {
+  const per100 = product[field] || 0;
+  return (grams / 100) * per100;
+}
+
+function fmtVal(val, decimals = 1) {
+  if (val == null || isNaN(val)) return '—';
+  return val < 0.01 ? '0' : val.toFixed(decimals);
+}
+
+function fmtUnit(field) {
+  // witaminy i minerały mogą być w µg lub mg
+  if (['vitamin_a','vitamin_b9','vitamin_b12','vitamin_d','vitamin_k','selenium','iodine','chromium'].some(x=>field.includes(x))) return 'µg';
+  if (field.includes('vitamin') || field.includes('calcium') || field.includes('iron') || field.includes('magnesium') || field.includes('phosphorus') || field.includes('potassium') || field.includes('zinc') || field.includes('copper') || field.includes('manganese') || field.includes('sodium')) return 'mg';
+  return 'g';
+}
+
+// Referencyjne dzienne wartości (dla paska)
+const DRI = {
+  calories_per_100g: 2000, protein_per_100g: 50, carbs_per_100g: 275, fat_per_100g: 78,
+  fiber_per_100g: 28, sugars_per_100g: 50, saturated_fat_per_100g: 20, salt_per_100g: 6,
+  vitamin_a_per_100g: 900, vitamin_b1_per_100g: 1.2, vitamin_b2_per_100g: 1.3,
+  vitamin_b3_per_100g: 16, vitamin_b6_per_100g: 1.7, vitamin_b9_per_100g: 400,
+  vitamin_b12_per_100g: 2.4, vitamin_c_per_100g: 90, vitamin_d_per_100g: 20,
+  vitamin_e_per_100g: 15, vitamin_k_per_100g: 120,
+  calcium_per_100g: 1000, iron_per_100g: 18, magnesium_per_100g: 420,
+  phosphorus_per_100g: 700, potassium_per_100g: 3500, zinc_per_100g: 11,
+  selenium_per_100g: 55, copper_per_100g: 0.9, manganese_per_100g: 2.3,
+  iodine_per_100g: 150, sodium_per_100g: 2300,
+};
+
+function MealPlannerScreen({ stores, onBack, onHome }) {
+  const [allProducts, setAllProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [mealName, setMealName] = useState('');
+  const [mealType, setMealType] = useState('lunch');
+  const [ingredients, setIngredients] = useState([
+    { id: Date.now(), product_id: '', qty: 100, unit: 'g' }
+  ]);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState('');
+
+  function showToast(msg) { setToast(msg); setTimeout(()=>setToast(''), 2500); }
+
+  useEffect(()=>{
+    fetch(`${API}/products`)
+      .then(r=>r.json())
+      .then(data => {
+        setAllProducts(data.filter(p => p.status === 'active' && p.calories_per_100g));
+        setLoadingProducts(false);
+      })
+      .catch(()=>setLoadingProducts(false));
+  }, []);
+
+  function addIngredient() {
+    setIngredients(prev=>[...prev, { id: Date.now(), product_id:'', qty:100, unit:'g' }]);
+  }
+
+  function removeIngredient(id) {
+    setIngredients(prev=>prev.filter(i=>i.id!==id));
+  }
+
+  function updateIngredient(id, field, value) {
+    setIngredients(prev=>prev.map(i=>i.id===id ? {...i, [field]:value} : i));
+  }
+
+  // Oblicz sumy odżywcze dla wszystkich składników
+  const nutrition = React.useMemo(() => {
+    const totals = {};
+    const FIELDS = [
+      'calories_per_100g','protein_per_100g','carbs_per_100g','fat_per_100g',
+      'fiber_per_100g','sugars_per_100g','saturated_fat_per_100g','salt_per_100g','sodium_per_100g',
+      'vitamin_a_per_100g','vitamin_b1_per_100g','vitamin_b2_per_100g','vitamin_b3_per_100g',
+      'vitamin_b6_per_100g','vitamin_b9_per_100g','vitamin_b12_per_100g','vitamin_c_per_100g',
+      'vitamin_d_per_100g','vitamin_e_per_100g','vitamin_k_per_100g',
+      'calcium_per_100g','iron_per_100g','magnesium_per_100g','phosphorus_per_100g',
+      'potassium_per_100g','zinc_per_100g','selenium_per_100g','copper_per_100g',
+      'manganese_per_100g','iodine_per_100g','sodium_per_100g',
+    ];
+    FIELDS.forEach(f => { totals[f] = 0; });
+
+    ingredients.forEach(ing => {
+      const product = allProducts.find(p=>p.id===Number(ing.product_id));
+      if (!product) return;
+      const grams = gramsForUnit(ing.unit, Number(ing.qty)||0, product.serving_weight_g);
+      FIELDS.forEach(f => { totals[f] += calcNutrient(product, f, grams); });
+    });
+
+    return totals;
+  }, [ingredients, allProducts]);
+
+  // Flagi dietetyczne na podstawie składników
+  const dietaryFlags = React.useMemo(() => {
+    const usedProducts = ingredients
+      .map(i=>allProducts.find(p=>p.id===Number(i.product_id)))
+      .filter(Boolean);
+    if (!usedProducts.length) return {};
+    return {
+      vegan:      usedProducts.every(p=>p.is_vegan===1),
+      vegetarian: usedProducts.every(p=>p.is_vegetarian===1||p.is_vegan===1),
+      gluten_free:usedProducts.every(p=>p.is_gluten_free===1),
+      lactose_free:usedProducts.every(p=>p.is_lactose_free===1),
+      organic:    usedProducts.every(p=>p.is_organic===1),
+    };
+  }, [ingredients, allProducts]);
+
+  async function saveMeal() {
+    if (!mealName.trim()) return showToast('Podaj nazwę posiłku');
+    const valid = ingredients.filter(i=>i.product_id && Number(i.qty)>0);
+    if (!valid.length) return showToast('Dodaj przynajmniej jeden składnik');
+    setSaving(true);
+    try {
+      const body = {
+        name: mealName.trim(),
+        meal_type: mealType,
+        ingredients: valid.map(i=>({
+          product_id: Number(i.product_id),
+          quantity: Number(i.qty),
+          unit: i.unit,
+        }))
+      };
+      const res = await fetch(`${API}/meals`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error('Błąd zapisu');
+      showToast('✓ Posiłek zapisany!');
+      setMealName(''); setIngredients([{id:Date.now(),product_id:'',qty:100,unit:'g'}]);
+    } catch(e) { showToast('Błąd: '+e.message); }
+    finally { setSaving(false); }
+  }
+
+  const macroColors = { protein:'#22d3ee', carbs:'#a78bfa', fat:'#fbbf24' };
+  const hasAnyNutrition = nutrition.calories_per_100g > 0;
+
+  return (
+    <div style={{minHeight:'100vh',background:'var(--bg)',display:'flex',flexDirection:'column'}}>
+      <Toast msg={toast}/>
+      <Header icon='🍽' sub='Planer posiłków' onBack={onBack} onHome={onHome}/>
+
+      <div className="planner-layout">
+        {/* ── LEWA STRONA: formularz ── */}
+        <div className="planner-left">
+
+          {/* Nazwa */}
+          <div>
+            <div className="planner-section-label">Nazwa posiłku</div>
+            <input className="planner-input" placeholder="np. Kurczak z ryżem i warzywami..."
+              value={mealName} onChange={e=>setMealName(e.target.value)}/>
+          </div>
+
+          {/* Typ */}
+          <div>
+            <div className="planner-section-label">Pora dnia</div>
+            <div className="planner-meal-type">
+              {MEAL_TYPES.map(t=>(
+                <button key={t} className={`meal-type-btn ${mealType===t?'active':''}`}
+                  onClick={()=>setMealType(t)}>
+                  {MEAL_TYPE_LABELS[t]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Składniki */}
+          <div style={{flex:1}}>
+            <div className="planner-section-label">Składniki</div>
+
+            {/* Nagłówek kolumn */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 80px 90px 32px',gap:8,marginBottom:4}}>
+              {['Produkt','Ilość','Jednostka',''].map((h,i)=>(
+                <div key={i} style={{fontSize:10,color:'var(--muted)',fontFamily:'DM Mono,monospace',letterSpacing:1}}>{h}</div>
+              ))}
+            </div>
+
+            {loadingProducts ? <Dots/> : ingredients.map((ing)=>{
+              const product = allProducts.find(p=>p.id===Number(ing.product_id));
+              const grams = product ? gramsForUnit(ing.unit, Number(ing.qty)||0, product.serving_weight_g) : 0;
+              const kcal = product ? calcNutrient(product,'calories_per_100g',grams) : 0;
+              return (
+                <div key={ing.id}>
+                  <div className="ingredient-row">
+                    <select className="ingredient-select" value={ing.product_id}
+                      onChange={e=>updateIngredient(ing.id,'product_id',e.target.value)}>
+                      <option value=''>— wybierz produkt —</option>
+                      {allProducts.map(p=>(
+                        <option key={p.id} value={p.id}>{p.name}{p.brand?` (${p.brand})`:''}</option>
+                      ))}
+                    </select>
+                    <input className="ingredient-qty" type="number" min="0" value={ing.qty}
+                      onChange={e=>updateIngredient(ing.id,'qty',e.target.value)}/>
+                    <select className="ingredient-unit" value={ing.unit}
+                      onChange={e=>updateIngredient(ing.id,'unit',e.target.value)}>
+                      {UNITS.map(u=><option key={u} value={u}>{UNIT_LABELS[u]}</option>)}
+                    </select>
+                    <button className="remove-btn" onClick={()=>removeIngredient(ing.id)}>×</button>
+                  </div>
+                  {product && kcal > 0 && (
+                    <div style={{fontSize:11,color:'var(--muted)',paddingLeft:4,paddingBottom:6,fontFamily:'DM Mono,monospace'}}>
+                      {Math.round(kcal)} kcal · {fmtVal(calcNutrient(product,'protein_per_100g',grams))}g B · {fmtVal(calcNutrient(product,'carbs_per_100g',grams))}g W · {fmtVal(calcNutrient(product,'fat_per_100g',grams))}g T
+                      {grams !== (Number(ing.qty)||0) && <span style={{marginLeft:8,opacity:0.6}}>({Math.round(grams)}g)</span>}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            <button className="add-ingredient-btn" onClick={addIngredient}>
+              + Dodaj składnik
+            </button>
+          </div>
+
+          <button className="save-meal-btn" onClick={saveMeal} disabled={saving||!mealName.trim()}>
+            {saving ? 'Zapisuję...' : '💾 Zapisz posiłek w NutriCart'}
+          </button>
+        </div>
+
+        {/* ── PRAWA STRONA: podsumowanie ── */}
+        <div className="planner-right">
+          {!hasAnyNutrition ? (
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',color:'var(--muted)',textAlign:'center',gap:16}}>
+              <div style={{fontSize:64,opacity:0.3}}>🥗</div>
+              <div style={{fontFamily:'DM Mono,monospace',fontSize:12,letterSpacing:2}}>DODAJ SKŁADNIKI<br/>ABY ZOBACZYĆ WARTOŚCI</div>
+            </div>
+          ) : (
+            <>
+              {/* Hero — kalorie */}
+              <div className="nutrition-hero">
+                <div className="nutrition-hero-kcal">{Math.round(nutrition.calories_per_100g)}</div>
+                <div className="nutrition-hero-label">KILOKALORII ŁĄCZNIE</div>
+                <div className="macro-row">
+                  {[
+                    {f:'protein_per_100g',   l:'BIAŁKO',      c:'#22d3ee'},
+                    {f:'carbs_per_100g',     l:'WĘGLOWODANY', c:'#a78bfa'},
+                    {f:'fat_per_100g',       l:'TŁUSZCZE',    c:'#fbbf24'},
+                  ].map(({f,l,c})=>(
+                    <div key={f} className="macro-card">
+                      <div className="macro-card-val" style={{color:c}}>{fmtVal(nutrition[f],1)}g</div>
+                      <div className="macro-card-lbl">{l}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Flagi dietetyczne */}
+              {Object.values(dietaryFlags).some(Boolean) && (
+                <div className="dietary-flags" style={{marginBottom:16}}>
+                  {Object.entries({
+                    vegan:'🌱 Wegański', vegetarian:'🥬 Wegetariański',
+                    gluten_free:'🌾 Bez glutenu', lactose_free:'🥛 Bez laktozy',
+                    organic:'♻ Bio'
+                  }).map(([k,l])=>(
+                    <span key={k} className={`dietary-flag ${dietaryFlags[k]?'yes':'no'}`}>{l}</span>
+                  ))}
+                </div>
+              )}
+
+              {/* Składniki — lista */}
+              <div className="micro-section" style={{marginBottom:16}}>
+                <div className="micro-section-title">Składniki posiłku</div>
+                {ingredients.filter(i=>i.product_id).map(ing=>{
+                  const p = allProducts.find(x=>x.id===Number(ing.product_id));
+                  if (!p) return null;
+                  const grams = gramsForUnit(ing.unit, Number(ing.qty)||0, p.serving_weight_g);
+                  const kcal = calcNutrient(p,'calories_per_100g',grams);
+                  return (
+                    <div key={ing.id} className="ingr-summary-row">
+                      <div>
+                        <div style={{fontWeight:500,color:'var(--text)'}}>{p.name}</div>
+                        <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>{Number(ing.qty)} {UNIT_LABELS[ing.unit]}{grams!==Number(ing.qty)?` · ${Math.round(grams)}g`:''}</div>
+                      </div>
+                      <div style={{textAlign:'right',flexShrink:0}}>
+                        <div style={{fontFamily:'DM Mono,monospace',fontSize:13,color:'var(--accent)'}}>{Math.round(kcal)} kcal</div>
+                        <div style={{fontSize:11,color:'var(--muted)'}}>B:{fmtVal(calcNutrient(p,'protein_per_100g',grams))} W:{fmtVal(calcNutrient(p,'carbs_per_100g',grams))} T:{fmtVal(calcNutrient(p,'fat_per_100g',grams))}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Szczegółowe makro */}
+              <div className="micro-section" style={{marginBottom:16}}>
+                <div className="micro-section-title">Makroskładniki szczegółowo</div>
+                {[
+                  {f:'fiber_per_100g',          l:'Błonnik',             u:'g'},
+                  {f:'sugars_per_100g',          l:'Cukry',               u:'g'},
+                  {f:'saturated_fat_per_100g',   l:'Tłuszcze nasycone',   u:'g'},
+                  {f:'salt_per_100g',            l:'Sól',                 u:'g'},
+                  {f:'sodium_per_100g',          l:'Sód',                 u:'mg'},
+                ].map(({f,l,u})=>{
+                  const val = nutrition[f]||0;
+                  const dri = DRI[f]||1;
+                  const pct = Math.min(100, (val/dri)*100);
+                  return (
+                    <div key={f} className="micro-row">
+                      <span className="micro-name">{l}</span>
+                      <div style={{display:'flex',alignItems:'center',gap:8}}>
+                        <span className="micro-val">{fmtVal(val,1)} {u}</span>
+                        <div className="micro-bar-wrap"><div className="micro-bar" style={{width:`${pct}%`}}/></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Witaminy */}
+              <div className="micro-section" style={{marginBottom:16}}>
+                <div className="micro-section-title">Witaminy</div>
+                {[
+                  {f:'vitamin_c_per_100g', l:'Witamina C',  u:'mg'},
+                  {f:'vitamin_a_per_100g', l:'Witamina A',  u:'µg'},
+                  {f:'vitamin_d_per_100g', l:'Witamina D',  u:'µg'},
+                  {f:'vitamin_e_per_100g', l:'Witamina E',  u:'mg'},
+                  {f:'vitamin_k_per_100g', l:'Witamina K',  u:'µg'},
+                  {f:'vitamin_b1_per_100g',l:'B1 (Tiamina)',u:'mg'},
+                  {f:'vitamin_b2_per_100g',l:'B2 (Rybofl.)',u:'mg'},
+                  {f:'vitamin_b3_per_100g',l:'B3 (Niacyna)',u:'mg'},
+                  {f:'vitamin_b6_per_100g',l:'B6',          u:'mg'},
+                  {f:'vitamin_b9_per_100g',l:'B9 (Folian)', u:'µg'},
+                  {f:'vitamin_b12_per_100g',l:'B12',        u:'µg'},
+                ].filter(({f})=>(nutrition[f]||0)>0).map(({f,l,u})=>{
+                  const val = nutrition[f]||0;
+                  const dri = DRI[f]||1;
+                  const pct = Math.min(100,(val/dri)*100);
+                  return (
+                    <div key={f} className="micro-row">
+                      <span className="micro-name">{l}</span>
+                      <div style={{display:'flex',alignItems:'center',gap:8}}>
+                        <span className="micro-val">{fmtVal(val,2)} {u}</span>
+                        <div className="micro-bar-wrap"><div className="micro-bar" style={{width:`${pct}%`}}/></div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {[
+                  'vitamin_c_per_100g','vitamin_a_per_100g','vitamin_d_per_100g','vitamin_e_per_100g',
+                  'vitamin_k_per_100g','vitamin_b1_per_100g','vitamin_b2_per_100g','vitamin_b3_per_100g',
+                  'vitamin_b6_per_100g','vitamin_b9_per_100g','vitamin_b12_per_100g'
+                ].every(f=>(nutrition[f]||0)===0) && (
+                  <div className="micro-row" style={{color:'var(--muted)',fontSize:12,justifyContent:'center'}}>
+                    brak danych o witaminach
+                  </div>
+                )}
+              </div>
+
+              {/* Minerały */}
+              <div className="micro-section">
+                <div className="micro-section-title">Minerały</div>
+                {[
+                  {f:'calcium_per_100g',   l:'Wapń',     u:'mg'},
+                  {f:'iron_per_100g',      l:'Żelazo',   u:'mg'},
+                  {f:'magnesium_per_100g', l:'Magnez',   u:'mg'},
+                  {f:'potassium_per_100g', l:'Potas',    u:'mg'},
+                  {f:'phosphorus_per_100g',l:'Fosfor',   u:'mg'},
+                  {f:'zinc_per_100g',      l:'Cynk',     u:'mg'},
+                  {f:'selenium_per_100g',  l:'Selen',    u:'µg'},
+                  {f:'copper_per_100g',    l:'Miedź',    u:'mg'},
+                  {f:'manganese_per_100g', l:'Mangan',   u:'mg'},
+                  {f:'iodine_per_100g',    l:'Jod',      u:'µg'},
+                ].filter(({f})=>(nutrition[f]||0)>0).map(({f,l,u})=>{
+                  const val = nutrition[f]||0;
+                  const dri = DRI[f]||1;
+                  const pct = Math.min(100,(val/dri)*100);
+                  return (
+                    <div key={f} className="micro-row">
+                      <span className="micro-name">{l}</span>
+                      <div style={{display:'flex',alignItems:'center',gap:8}}>
+                        <span className="micro-val">{fmtVal(val,1)} {u}</span>
+                        <div className="micro-bar-wrap"><div className="micro-bar" style={{width:`${pct}%`}}/></div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {[
+                  'calcium_per_100g','iron_per_100g','magnesium_per_100g','potassium_per_100g',
+                  'phosphorus_per_100g','zinc_per_100g','selenium_per_100g','copper_per_100g',
+                  'manganese_per_100g','iodine_per_100g'
+                ].every(f=>(nutrition[f]||0)===0) && (
+                  <div className="micro-row" style={{color:'var(--muted)',fontSize:12,justifyContent:'center'}}>
+                    brak danych o minerałach
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ── GenericProductsScreen ─────────────────────────────────────────────────────
+
+const CATEGORIES = ['owoce','warzywa','mięso','nabiał','zboża','strączkowe','orzechy','napoje','słodycze','przekąski','sosy','przyprawy','mrożone','konserwy','inne'];
+
+function GenericProductsScreen({ stores, onBack, onHome }) {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editItem, setEditItem] = useState(null); // null = nowy, object = edytowany
+  const [toast, setToast] = useState('');
+  const [search, setSearch] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  // Formularz
+  const emptyForm = { name:'', category:'inne', calories_per_100g:'', protein_per_100g:'', carbs_per_100g:'', fat_per_100g:'', fiber_per_100g:'', sugars_per_100g:'', saturated_fat_per_100g:'', salt_per_100g:'', serving_unit:'g', serving_weight_g:'100', is_ready_to_eat:null };
+  const [form, setForm] = useState(emptyForm);
+
+  function showToast(msg) { setToast(msg); setTimeout(()=>setToast(''),2500); }
+
+  async function load() {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/products/generic`);
+      setProducts(await res.json());
+    } catch(e) {}
+    finally { setLoading(false); }
+  }
+
+  useEffect(()=>{ load(); }, []);
+
+  function openNew() {
+    setForm(emptyForm);
+    setEditItem(null);
+    setShowForm(true);
+  }
+
+  function openEdit(p) {
+    setForm({
+      name: p.name||'', category: p.category||'inne',
+      calories_per_100g: p.calories_per_100g||'',
+      protein_per_100g: p.protein_per_100g||'',
+      carbs_per_100g: p.carbs_per_100g||'',
+      fat_per_100g: p.fat_per_100g||'',
+      fiber_per_100g: p.fiber_per_100g||'',
+      sugars_per_100g: p.sugars_per_100g||'',
+      saturated_fat_per_100g: p.saturated_fat_per_100g||'',
+      salt_per_100g: p.salt_per_100g||'',
+      serving_unit: p.serving_unit||'g',
+      serving_weight_g: p.serving_weight_g||100,
+      is_ready_to_eat: p.is_ready_to_eat,
+    });
+    setEditItem(p);
+    setShowForm(true);
+  }
+
+  function setF(k, v) { setForm(prev=>({...prev, [k]:v})); }
+
+  async function save() {
+    if (!form.name.trim()) return showToast('Podaj nazwę');
+    setSaving(true);
+    try {
+      const body = {
+        ...form,
+        calories_per_100g: form.calories_per_100g !== '' ? Number(form.calories_per_100g) : null,
+        protein_per_100g:  form.protein_per_100g  !== '' ? Number(form.protein_per_100g)  : null,
+        carbs_per_100g:    form.carbs_per_100g    !== '' ? Number(form.carbs_per_100g)    : null,
+        fat_per_100g:      form.fat_per_100g      !== '' ? Number(form.fat_per_100g)      : null,
+        fiber_per_100g:    form.fiber_per_100g    !== '' ? Number(form.fiber_per_100g)    : null,
+        sugars_per_100g:   form.sugars_per_100g   !== '' ? Number(form.sugars_per_100g)   : null,
+        saturated_fat_per_100g: form.saturated_fat_per_100g !== '' ? Number(form.saturated_fat_per_100g) : null,
+        salt_per_100g:     form.salt_per_100g     !== '' ? Number(form.salt_per_100g)     : null,
+        serving_weight_g:  Number(form.serving_weight_g)||100,
+      };
+      if (editItem) {
+        await fetch(`${API}/products/generic/${editItem.id}`, {
+          method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+        });
+        showToast('✓ Zaktualizowano');
+      } else {
+        await fetch(`${API}/products/generic`, {
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+        });
+        showToast('✓ Dodano produkt generyczny');
+      }
+      await load();
+      setShowForm(false);
+    } catch(e) { showToast('Błąd: '+e.message); }
+    finally { setSaving(false); }
+  }
+
+  const filtered = products.filter(p =>
+    !search || p.name.toLowerCase().includes(search.toLowerCase()) || (p.category||'').includes(search.toLowerCase())
+  );
+
+  // ── Formularz ──
+  if (showForm) return (
+    <div style={{minHeight:'100vh',background:'var(--bg)'}}>
+      <Toast msg={toast}/>
+      <Header icon='🧬' sub={editItem?'Edytuj generyczny':'Nowy generyczny'} onBack={()=>setShowForm(false)} onHome={onHome}/>
+      <div className="screen" style={{maxWidth:560,margin:'0 auto'}}>
+
+        <div className="planner-section-label">Nazwa i kategoria</div>
+        <input className="planner-input" style={{marginBottom:10}} placeholder="np. Jabłko, Ryż biały, Mąka pszenna..."
+          value={form.name} onChange={e=>setF('name',e.target.value)}/>
+        <select className="ingredient-unit" style={{width:'100%',padding:'11px 12px',borderRadius:12,marginBottom:20,fontSize:14}}
+          value={form.category} onChange={e=>setF('category',e.target.value)}>
+          {CATEGORIES.map(c=><option key={c} value={c}>{c}</option>)}
+        </select>
+
+        <div className="planner-section-label">Wartości odżywcze (na 100g)</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:20}}>
+          {[
+            {k:'calories_per_100g',   l:'Kalorie (kcal)'},
+            {k:'protein_per_100g',    l:'Białko (g)'},
+            {k:'carbs_per_100g',      l:'Węglowodany (g)'},
+            {k:'fat_per_100g',        l:'Tłuszcze (g)'},
+            {k:'fiber_per_100g',      l:'Błonnik (g)'},
+            {k:'sugars_per_100g',     l:'Cukry (g)'},
+            {k:'saturated_fat_per_100g',l:'T. nasycone (g)'},
+            {k:'salt_per_100g',       l:'Sól (g)'},
+          ].map(({k,l})=>(
+            <div key={k}>
+              <div style={{fontSize:11,color:'var(--muted)',marginBottom:4,fontFamily:'DM Mono,monospace',letterSpacing:1}}>{l}</div>
+              <input className="ingredient-qty" style={{width:'100%',textAlign:'left',padding:'9px 12px'}}
+                type="number" min="0" step="0.1" placeholder="—"
+                value={form[k]} onChange={e=>setF(k,e.target.value)}/>
+            </div>
+          ))}
+        </div>
+
+        <div className="planner-section-label">Domyślna porcja</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:20}}>
+          <div>
+            <div style={{fontSize:11,color:'var(--muted)',marginBottom:4,fontFamily:'DM Mono,monospace',letterSpacing:1}}>Jednostka</div>
+            <select className="ingredient-unit" style={{width:'100%',padding:'11px 12px',borderRadius:12,fontSize:13}}
+              value={form.serving_unit} onChange={e=>setF('serving_unit',e.target.value)}>
+              {['g','ml','piece','tbsp','tsp','cup'].map(u=><option key={u} value={u}>{u}</option>)}
+            </select>
+          </div>
+          <div>
+            <div style={{fontSize:11,color:'var(--muted)',marginBottom:4,fontFamily:'DM Mono,monospace',letterSpacing:1}}>Waga porcji (g)</div>
+            <input className="ingredient-qty" style={{width:'100%',textAlign:'left',padding:'9px 12px'}}
+              type="number" min="1" value={form.serving_weight_g} onChange={e=>setF('serving_weight_g',e.target.value)}/>
+          </div>
+        </div>
+
+        <div className="planner-section-label">Gotowy do spożycia?</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:28}}>
+          {[{v:1,l:'✅ Tak'},{v:0,l:'🍳 Nie'},{v:null,l:'❓ Nie wiem'}].map(opt=>(
+            <button key={String(opt.v)} onClick={()=>setF('is_ready_to_eat',opt.v)}
+              style={{padding:'10px 6px',borderRadius:12,border:'none',cursor:'pointer',textAlign:'center',
+                background:form.is_ready_to_eat===opt.v?'rgba(34,211,238,0.12)':'var(--surface)',
+                outline:form.is_ready_to_eat===opt.v?'2px solid var(--accent)':'1px solid var(--border)',
+                color:form.is_ready_to_eat===opt.v?'var(--accent)':'var(--muted)'}}>
+              <div style={{fontSize:13,fontWeight:600}}>{opt.l}</div>
+            </button>
+          ))}
+        </div>
+
+        <button className="save-meal-btn" onClick={save} disabled={saving||!form.name.trim()}>
+          {saving?'Zapisuję...':(editItem?'💾 Zapisz zmiany':'🧬 Dodaj produkt generyczny')}
+        </button>
+        <button className="btn-secondary" onClick={()=>setShowForm(false)}>Anuluj</button>
+      </div>
+    </div>
+  );
+
+  // ── Lista ──
+  return (
+    <div style={{minHeight:'100vh',background:'var(--bg)'}}>
+      <Toast msg={toast}/>
+      <Header icon='🧬' sub={`Generyczne (${products.length})`} onBack={onBack} onHome={onHome}/>
+      <div className="screen">
+        <button className="btn-primary" onClick={openNew}>+ Dodaj produkt generyczny</button>
+        <input className="search-input" placeholder="🔍 Szukaj..." value={search} onChange={e=>setSearch(e.target.value)}/>
+
+        {loading ? <Dots/> : filtered.length===0 ? (
+          <div style={{textAlign:'center',padding:'40px 0',color:'var(--muted)'}}>
+            <div style={{fontSize:48,marginBottom:12}}>🧬</div>
+            <div style={{fontSize:14}}>Brak produktów generycznych.<br/>Dodaj szablon np. "Jabłko" czy "Ryż biały".</div>
+          </div>
+        ) : filtered.map(p=>(
+          <div key={p.id} className="product-row" onClick={()=>openEdit(p)}>
+            <div className="product-row-img" style={{background:'var(--surface2)',fontSize:20}}>🧬</div>
+            <div className="product-row-info">
+              <div className="product-row-name">{p.name}</div>
+              <div className="product-row-meta">
+                {p.category} · {p.calories_per_100g ? `${Math.round(p.calories_per_100g)} kcal` : 'brak kalorii'}
+                {p.is_ready_to_eat===1?' · gotowy':p.is_ready_to_eat===0?' · wymaga prep.':''}
+              </div>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:4,alignItems:'flex-end',flexShrink:0}}>
+              <span className="status-badge active">generyczny</span>
+              <span style={{fontSize:10,color:'var(--muted)',fontFamily:'DM Mono,monospace'}}>
+                B:{p.protein_per_100g!=null?Number(p.protein_per_100g).toFixed(1):'?'} W:{p.carbs_per_100g!=null?Number(p.carbs_per_100g).toFixed(1):'?'} T:{p.fat_per_100g!=null?Number(p.fat_per_100g).toFixed(1):'?'}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const MENU = [
   { id:'single',  icon:'📷', title:'Skanowanie produktu',    sub:'Skanuj i od razu konfiguruj' },
   { id:'bulk',    icon:'📦', title:'Skanowanie wielu',        sub:'Zapisuj kody na później' },
   { id:'products',icon:'🗄', title:'Produkty',               sub:'Przeglądaj i modyfikuj' },
   { id:'saved',   icon:'🗂', title:'Zapisane kody',           sub:'Z poprzednich sesji' },
   { id:'stores',  icon:'🏪', title:'Sklepy',                  sub:'Zarządzaj sklepami' },
+  { id:'planner', icon:'🍽', title:'Planer posiłków',          sub:'Komponuj i zapisuj przepisy' },
+  { id:'generics', icon:'🧬', title:'Produkty generyczne',       sub:'Szablony bez barkodów' },
 ];
 
 function App() {
   const [screen, setScreen] = useState('menu');
   const [stores, reloadStores] = useStores();
 
-  const screenProps = { stores, onBack:()=>setScreen('menu') };
+  const onHome = () => setScreen('menu');
+  const screenProps = { stores, onBack:onHome, onHome };
 
   if (screen === 'single')   return <SingleScanScreen {...screenProps}/>;
   if (screen === 'bulk')     return <BulkScanScreen {...screenProps}/>;
   if (screen === 'products') return <ProductsScreen {...screenProps}/>;
   if (screen === 'saved')    return <SavedBarcodesScreen {...screenProps}/>;
   if (screen === 'stores')   return <StoresScreen {...screenProps} reloadStores={reloadStores}/>;
+  if (screen === 'planner')  return <MealPlannerScreen {...screenProps}/>;
+  if (screen === 'generics') return <GenericProductsScreen {...screenProps}/>;
 
   return (
     <div style={{minHeight:'100vh',background:'var(--bg)'}}>
-      <div className="header">
-        <div className="header-top">
-          <div className="logo-icon">📡</div>
-          <div><div className="logo-text">NutriCart</div><div className="logo-sub">Product Scanner</div></div>
-        </div>
-      </div>
+      <Header icon='📡' sub='Product Scanner'/>
       <div className="menu-grid">
         {MENU.map(m=>(
           <button key={m.id} className="menu-card" onClick={()=>setScreen(m.id)}>

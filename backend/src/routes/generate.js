@@ -41,16 +41,18 @@ router.post('/', async (req, res) => {
 
     const placeholders = store_ids.map(() => '?').join(',');
 
-    // Wszystkie aktywne produkty w wybranych sklepach (do przepisów - sprawdzamy dostępność)
+    // Aktywne produkty w wybranych sklepach — wykluczamy konkretne instancje generycznych
+    // (generic_product_id IS NOT NULL = produkt ma swój generyczny odpowiednik → pomijamy)
     const [allActiveProducts] = await db.query(
       `SELECT DISTINCT p.id, p.name, p.calories_per_100g, p.protein_per_100g,
               p.carbs_per_100g, p.fat_per_100g, p.serving_unit, p.serving_weight_g,
-              p.category, p.is_ready_to_eat
+              p.category, p.is_ready_to_eat, p.is_generic
        FROM products p
        JOIN product_stores ps ON p.id = ps.product_id
        WHERE ps.store_id IN (${placeholders})
          AND p.status = 'active'
-         AND p.calories_per_100g IS NOT NULL`,
+         AND p.calories_per_100g IS NOT NULL
+         AND p.generic_product_id IS NULL`,
       store_ids
     );
 

@@ -157,20 +157,50 @@ router.post('/:barcode', async (req, res) => {
 
       let productId;
 
+      // Wyciągnij generic_product_id z body jeśli podano
+      const { generic_product_id } = req.body;
+
       if (existing.length > 0) {
         // Aktualizuj istniejący
         productId = existing[0].id;
+        const updateFields = ['status = ?', 'is_ready_to_eat = ?'];
+        const updateVals = [status, is_ready_to_eat];
+        if (generic_product_id !== undefined) {
+          updateFields.push('generic_product_id = ?');
+          updateVals.push(generic_product_id || null);
+        }
+        updateVals.push(productId);
         await conn.query(
-          `UPDATE products SET status = ?, is_ready_to_eat = ? WHERE id = ?`,
-          [status, is_ready_to_eat, productId]
+          `UPDATE products SET ${updateFields.join(', ')} WHERE id = ?`, updateVals
         );
       } else {
         // Nowy produkt — wstaw z pełnymi danymi z OFF
+        // Jeśli podano generic_product_id i brakuje wartości odżywczych → dziedzicz z generycznego
+        let inheritedData = {};
+        if (generic_product_id) {
+          const [genRows] = await conn.query(
+            `SELECT calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g,
+                    fiber_per_100g, sugars_per_100g, saturated_fat_per_100g, salt_per_100g,
+                    sodium_per_100g, is_ready_to_eat
+             FROM products WHERE id = ? AND is_generic = 1`, [generic_product_id]
+          );
+          if (genRows.length > 0) {
+            inheritedData = genRows[0];
+          }
+        }
+
         const data = {
           ...offData,
           barcode,
           status: status || 'inactive_incomplete',
-          is_ready_to_eat: is_ready_to_eat ?? null,
+          is_ready_to_eat: is_ready_to_eat ?? inheritedData.is_ready_to_eat ?? null,
+          generic_product_id: generic_product_id || null,
+          // Wartości z OFF mają priorytet, ale jeśli brak → dziedzicz z generycznego
+          calories_per_100g: offData.calories_per_100g ?? inheritedData.calories_per_100g ?? null,
+          protein_per_100g:  offData.protein_per_100g  ?? inheritedData.protein_per_100g  ?? null,
+          carbs_per_100g:    offData.carbs_per_100g    ?? inheritedData.carbs_per_100g    ?? null,
+          fat_per_100g:      offData.fat_per_100g      ?? inheritedData.fat_per_100g      ?? null,
+          fiber_per_100g:    offData.fiber_per_100g    ?? inheritedData.fiber_per_100g    ?? null,
         };
         // Usuń pola których nie ma w bazie
         delete data.store_ids;
