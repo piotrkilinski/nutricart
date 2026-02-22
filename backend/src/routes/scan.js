@@ -15,46 +15,53 @@ const FIELDS = [
   'attribute_groups_en',
 ].join(',');
 
+/**
+ * GET /api/scan/:barcode
+ * Tylko CZYTA — nie zapisuje nic do bazy.
+ * Zwraca:
+ *   - dane z OFF (zawsze świeże)
+ *   - jeśli produkt jest w bazie: aktualne wartości (status, is_ready_to_eat, store_ids, id)
+ *   - is_new: true/false
+ */
 router.get('/:barcode', async (req, res) => {
   const { barcode } = req.params;
-  const { store_id } = req.query;
-
   try {
-    // Sprawdz czy produkt juz istnieje
+    // 1. Sprawdz bazę
     const [existing] = await db.query('SELECT * FROM products WHERE barcode = ?', [barcode]);
-    if (existing.length > 0) {
-      const product = existing[0];
-      if (store_id) {
-        await db.query(
-          'INSERT IGNORE INTO product_stores (product_id, store_id) VALUES (?, ?)',
-          [product.id, store_id]
-        );
-      }
-      const [stores] = await db.query('SELECT store_id FROM product_stores WHERE product_id = ?', [product.id]);
-      return res.json({
-        status: 'existing',
-        message: 'Produkt już istnieje w bazie',
-        product: { ...product, store_ids: stores.map(s => s.store_id) }
-      });
+    const dbProduct = existing.length > 0 ? existing[0] : null;
+    let dbStoreIds = [];
+    if (dbProduct) {
+      const [stores] = await db.query(
+        'SELECT store_id FROM product_stores WHERE product_id = ?', [dbProduct.id]
+      );
+      dbStoreIds = stores.map(s => s.store_id);
     }
 
-    // Pobierz z OpenFoodFacts
+    // 2. Pobierz z OpenFoodFacts
     const offRes = await fetch(`${OFF_API}/${barcode}.json?fields=${FIELDS}`, {
       headers: { 'User-Agent': 'NutriCart/1.0 (nutricart@example.com)' }
     });
     const offData = await offRes.json();
 
     if (!offData.product || offData.status === 0) {
+      // Nie ma w OFF — jeśli jest w bazie to i tak pokaż
+      if (dbProduct) {
+        return res.json({
+          is_new: false,
+          product: { ...dbProduct, store_ids: dbStoreIds },
+          off_preview: null,
+        });
+      }
       return res.status(404).json({ status: 'not_found', message: 'Produkt nie znaleziony w OpenFoodFacts' });
     }
 
+    // 3. Zbuduj podgląd z OFF (bez zapisywania)
     const p = offData.product;
     const n = p.nutriments || {};
     const labels = p.labels_tags || [];
     const attrs = extractAttributes(p.attribute_groups_en || []);
 
-    // Buduj obiekt z danymi — INSERT użyje kluczy jako nazw kolumn
-    const data = {
+    const offPreview = {
       name: p.product_name_pl || p.product_name || 'Nieznany produkt',
       barcode,
       brand: p.brands || null,
@@ -62,8 +69,6 @@ router.get('/:barcode', async (req, res) => {
       category: mapCategory(p.categories_tags),
       serving_unit: 'g',
       serving_weight_g: parseServingWeight(p.serving_size),
-
-      // Makroskładniki
       calories_per_100g: n['energy-kcal_100g'] || (n['energy-kj_100g'] ? Math.round(n['energy-kj_100g'] / 4.184) : null),
       protein_per_100g: n.proteins_100g || null,
       carbs_per_100g: n.carbohydrates_100g || null,
@@ -73,8 +78,6 @@ router.get('/:barcode', async (req, res) => {
       saturated_fat_per_100g: n['saturated-fat_100g'] || null,
       salt_per_100g: n.salt_100g || null,
       sodium_per_100g: n.sodium_100g ? n.sodium_100g * 1000 : null,
-
-      // Witaminy
       vitamin_a_per_100g: n['vitamin-a_100g'] ? n['vitamin-a_100g'] * 1000000 : null,
       vitamin_b1_per_100g: n['vitamin-b1_100g'] ? n['vitamin-b1_100g'] * 1000 : null,
       vitamin_b2_per_100g: n['vitamin-b2_100g'] ? n['vitamin-b2_100g'] * 1000 : null,
@@ -86,8 +89,6 @@ router.get('/:barcode', async (req, res) => {
       vitamin_d_per_100g: n['vitamin-d_100g'] ? n['vitamin-d_100g'] * 1000000 : null,
       vitamin_e_per_100g: n['vitamin-e_100g'] ? n['vitamin-e_100g'] * 1000 : null,
       vitamin_k_per_100g: n['vitamin-k_100g'] ? n['vitamin-k_100g'] * 1000000 : null,
-
-      // Minerały
       calcium_per_100g: n.calcium_100g ? n.calcium_100g * 1000 : null,
       iron_per_100g: n.iron_100g ? n.iron_100g * 1000 : null,
       magnesium_per_100g: n.magnesium_100g ? n.magnesium_100g * 1000 : null,
@@ -99,19 +100,13 @@ router.get('/:barcode', async (req, res) => {
       manganese_per_100g: n.manganese_100g ? n.manganese_100g * 1000 : null,
       iodine_per_100g: n.iodine_100g ? n.iodine_100g * 1000000 : null,
       chromium_per_100g: n.chromium_100g ? n.chromium_100g * 1000000 : null,
-
-      // Składniki i alergeny
       ingredients_text: p.ingredients_text_pl || p.ingredients_text || null,
       allergens: p.allergens_tags?.length ? JSON.stringify(p.allergens_tags) : null,
       traces: p.traces_tags?.length ? JSON.stringify(p.traces_tags) : null,
       additives: p.additives_tags?.length ? JSON.stringify(p.additives_tags) : null,
-
-      // Oceny
       nutriscore: p.nutrition_grades ? p.nutrition_grades.trim().toUpperCase().charAt(0) : null,
       nova_group: p.nova_group || null,
       ecoscore: p.ecoscore_grade ? p.ecoscore_grade.trim().toUpperCase().charAt(0) : null,
-
-      // Preferencje dietetyczne
       is_vegan: attrs.vegan ?? inferFromLabels(labels, ['en:vegan']),
       is_vegetarian: attrs.vegetarian ?? inferFromLabels(labels, ['en:vegetarian', 'en:vegan']),
       is_gluten_free: inferFromLabels(labels, ['en:gluten-free', 'en:no-gluten']),
@@ -120,51 +115,93 @@ router.get('/:barcode', async (req, res) => {
       is_palm_oil_free: inferFromLabels(labels, ['en:no-palm-oil', 'en:palm-oil-free']),
       is_halal: inferFromLabels(labels, ['en:halal']),
       is_kosher: inferFromLabels(labels, ['en:kosher']),
-
-      // Opakowanie i pochodzenie
       packaging: p.packaging_tags?.length ? JSON.stringify(p.packaging_tags) : null,
       origins: p.origins || null,
       countries: p.countries_tags?.length ? JSON.stringify(p.countries_tags) : null,
-
-      // Zdjęcia
       image_url: p.image_front_url || null,
       image_nutrition_url: p.image_nutrition_url || null,
       image_ingredients_url: p.image_ingredients_url || null,
-
       off_data: JSON.stringify(offData.product),
-      status: 'inactive_incomplete',
-      is_ready_to_eat: null,
     };
 
-    // Dynamiczny INSERT — kolumny i wartości generowane z obiektu
-    // Gwarantuje że liczba kolumn = liczba wartości
-    const columns = Object.keys(data);
-    const values = Object.values(data);
-    const placeholders = columns.map(() => '?').join(', ');
-    const columnNames = columns.map(c => `\`${c}\``).join(', ');
+    res.json({
+      is_new: !dbProduct,
+      // Jeśli jest w bazie — zwróć dane z bazy (mają priorytet), podgląd OFF jako uzupełnienie
+      product: dbProduct
+        ? { ...dbProduct, store_ids: dbStoreIds }
+        : null,
+      off_preview: offPreview,
+    });
 
+  } catch (err) {
+    console.error('Scan GET error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/scan/:barcode
+ * Zapisuje produkt do bazy (nowy lub aktualizacja istniejącego).
+ * Body: { store_ids, status, is_ready_to_eat, ...off_preview_data }
+ */
+router.post('/:barcode', async (req, res) => {
+  const { barcode } = req.params;
+  const { store_ids = [], status, is_ready_to_eat, ...offData } = req.body;
+
+  try {
+    const [existing] = await db.query('SELECT id FROM products WHERE barcode = ?', [barcode]);
     const conn = await db.getConnection();
+
     try {
       await conn.beginTransaction();
 
-      const [result] = await conn.query(
-        `INSERT INTO products (${columnNames}) VALUES (${placeholders})`,
-        values
-      );
+      let productId;
 
-      if (store_id) {
+      if (existing.length > 0) {
+        // Aktualizuj istniejący
+        productId = existing[0].id;
         await conn.query(
-          'INSERT IGNORE INTO product_stores (product_id, store_id) VALUES (?, ?)',
-          [result.insertId, store_id]
+          `UPDATE products SET status = ?, is_ready_to_eat = ? WHERE id = ?`,
+          [status, is_ready_to_eat, productId]
         );
+      } else {
+        // Nowy produkt — wstaw z pełnymi danymi z OFF
+        const data = {
+          ...offData,
+          barcode,
+          status: status || 'inactive_incomplete',
+          is_ready_to_eat: is_ready_to_eat ?? null,
+        };
+        // Usuń pola których nie ma w bazie
+        delete data.store_ids;
+
+        const columns = Object.keys(data);
+        const values = Object.values(data);
+        const placeholders = columns.map(() => '?').join(', ');
+        const columnNames = columns.map(c => `\`${c}\``).join(', ');
+
+        const [result] = await conn.query(
+          `INSERT INTO products (${columnNames}) VALUES (${placeholders})`,
+          values
+        );
+        productId = result.insertId;
+      }
+
+      // Aktualizuj sklepy — usuń stare, wstaw nowe
+      await conn.query('DELETE FROM product_stores WHERE product_id = ?', [productId]);
+      if (store_ids.length > 0) {
+        const storeValues = store_ids.map(sid => [productId, sid]);
+        await conn.query('INSERT INTO product_stores (product_id, store_id) VALUES ?', [storeValues]);
       }
 
       await conn.commit();
-      res.status(201).json({
-        status: 'created',
-        message: 'Produkt dodany do bazy',
-        product: { id: result.insertId, ...data, store_ids: store_id ? [parseInt(store_id)] : [] }
+
+      const [updated] = await conn.query('SELECT * FROM products WHERE id = ?', [productId]);
+      res.status(existing.length > 0 ? 200 : 201).json({
+        status: existing.length > 0 ? 'updated' : 'created',
+        product: { ...updated[0], store_ids },
       });
+
     } catch (err) {
       await conn.rollback();
       throw err;
@@ -173,7 +210,7 @@ router.get('/:barcode', async (req, res) => {
     }
 
   } catch (err) {
-    console.error('Scan error:', err);
+    console.error('Scan POST error:', err);
     res.status(500).json({ error: err.message });
   }
 });

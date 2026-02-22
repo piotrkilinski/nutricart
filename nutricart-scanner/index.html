@@ -489,11 +489,11 @@
 <div id="root"></div>
 
 <script type="text/babel" data-type="module" data-presets="react">
-const { useState, useEffect, useRef, useCallback } = React;
+const { useState, useEffect, useRef } = React;
 
 const API_URL = 'https://nutricart-production.up.railway.app/api';
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Małe komponenty pomocnicze ────────────────────────────────────────────────
 
 function NutriScore({ grade }) {
   if (!grade) return null;
@@ -510,7 +510,7 @@ function MacroBox({ val, lbl, className }) {
   );
 }
 
-// ── Scanner Component (natywny getUserMedia + BarcodeDetector) ───────────────
+// ── BarcodeScanner ────────────────────────────────────────────────────────────
 
 function BarcodeScanner({ onDetected, active }) {
   const videoRef = useRef(null);
@@ -519,12 +519,8 @@ function BarcodeScanner({ onDetected, active }) {
   const detectedRef = useRef(false);
 
   useEffect(() => {
-    if (active) {
-      detectedRef.current = false;
-      startCamera();
-    } else {
-      stopCamera();
-    }
+    if (active) { detectedRef.current = false; startCamera(); }
+    else stopCamera();
     return () => stopCamera();
   }, [active]);
 
@@ -534,12 +530,8 @@ function BarcodeScanner({ onDetected, active }) {
         video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
+      if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); }
 
-      // Uzyj BarcodeDetector API jesli dostepne (Chrome Android)
       if ('BarcodeDetector' in window) {
         const detector = new BarcodeDetector({
           formats: ['ean_13', 'ean_8', 'code_128', 'upc_a', 'upc_e', 'qr_code']
@@ -549,295 +541,262 @@ function BarcodeScanner({ onDetected, active }) {
           if (videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
             try {
               const barcodes = await detector.detect(videoRef.current);
-              if (barcodes.length > 0) {
-                detectedRef.current = true;
-                onDetected(barcodes[0].rawValue);
-                return;
-              }
+              if (barcodes.length > 0) { detectedRef.current = true; onDetected(barcodes[0].rawValue); return; }
             } catch(e) {}
           }
           rafRef.current = requestAnimationFrame(scan);
         };
-        videoRef.current.addEventListener('loadeddata', () => {
-          rafRef.current = requestAnimationFrame(scan);
-        });
+        videoRef.current.addEventListener('loadeddata', () => { rafRef.current = requestAnimationFrame(scan); });
       }
-      // Fallback: bez detekcji - uzytkownik skanuje recznie
-    } catch (err) {
-      console.error('Camera error:', err);
-    }
+    } catch (err) { console.error('Camera error:', err); }
   }
 
   function stopCamera() {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
-      streamRef.current = null;
-    }
+    if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
   }
 
   return (
     <div className="scanner-box" style={{ background: '#000', position: 'relative', overflow: 'hidden', borderRadius: 20, aspectRatio: '4/3' }}>
-      <video
-        ref={videoRef}
-        muted
-        playsInline
-        autoPlay
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: active ? 'block' : 'none' }}
-      />
+      <video ref={videoRef} muted playsInline autoPlay
+        style={{ width: '100%', height: '100%', objectFit: 'cover', display: active ? 'block' : 'none' }} />
       {active && (
-        <div style={{
-          position: 'absolute', inset: 0, display: 'flex',
-          flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          pointerEvents: 'none'
-        }}>
-          <div className="scan-frame">
-            <div className="scan-frame-inner" />
-            <div className="scan-line" />
-          </div>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+          <div className="scan-frame"><div className="scan-frame-inner" /><div className="scan-line" /></div>
           <div className="scan-hint" style={{ marginTop: 12 }}>SKIERUJ KAMERĘ NA KOD KRESKOWY</div>
         </div>
       )}
       {!active && (
         <div className="scanner-placeholder">
           <div className="scanner-icon">📷</div>
-          <div className="scanner-start-text">
-            Kliknij "Uruchom skaner"<br/>aby zeskanować kod kreskowy
-          </div>
+          <div className="scanner-start-text">Kliknij "Uruchom skaner"<br/>aby zeskanować kod kreskowy</div>
         </div>
       )}
     </div>
   );
 }
 
-// ── Review Screen — pojawia się po dodaniu nowego produktu ───────────────────
+// ── ConfigScreen — ekran konfiguracji produktu (nowy i istniejący) ────────────
 
-function ReviewScreen({ product, onDone }) {
-  const [readyToEat, setReadyToEat] = useState(null);   // null | true | false
-  const [activate, setActivate] = useState(false);
+function ConfigScreen({ barcode, stores, onSaved, onBack }) {
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [isNew, setIsNew] = useState(true);
+
+  // Dane produktu do wyświetlenia (z OFF lub bazy)
+  const [preview, setPreview] = useState(null);
+
+  // Konfigurowalne pola
+  const [selectedStores, setSelectedStores] = useState([]);
+  const [readyToEat, setReadyToEat] = useState(null);
+  const [activate, setActivate] = useState(false);
+
+  useEffect(() => { loadProduct(); }, [barcode]);
+
+  async function loadProduct() {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_URL}/scan/${barcode}`);
+      const data = await res.json();
+
+      if (res.status === 404) { setError('Produkt nie znaleziony w OpenFoodFacts'); setLoading(false); return; }
+      if (!res.ok) { setError(data.error || 'Błąd pobierania danych'); setLoading(false); return; }
+
+      setIsNew(data.is_new);
+
+      if (data.is_new) {
+        // Nowy — pokaż dane z OFF, domyślne ustawienia
+        setPreview(data.off_preview);
+        setSelectedStores([]);
+        setReadyToEat(null);
+        setActivate(false);
+      } else {
+        // Istniejący — pokaż dane z bazy, wczytaj aktualne ustawienia
+        const prod = data.product;
+        // Uzupełnij brakujące pola z OFF preview jeśli są
+        setPreview(data.off_preview || prod);
+        setSelectedStores(prod.store_ids || []);
+        setReadyToEat(prod.is_ready_to_eat === 1 ? true : prod.is_ready_to_eat === 0 ? false : null);
+        setActivate(prod.status === 'active');
+      }
+    } catch(e) {
+      setError('Błąd połączenia z API');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function toggleStore(id) {
+    setSelectedStores(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }
 
   async function handleSave() {
     setSaving(true);
     setError('');
     try {
       const body = {
-        is_ready_to_eat: readyToEat === null ? null : (readyToEat ? 1 : 0),
+        ...preview,
+        store_ids: selectedStores,
         status: activate ? 'active' : 'inactive_incomplete',
+        is_ready_to_eat: readyToEat === null ? null : (readyToEat ? 1 : 0),
       };
-      const res = await fetch(`${API_URL}/products/${product.id}/quick-update`, {
-        method: 'PATCH',
+
+      const res = await fetch(`${API_URL}/scan/${barcode}`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error('Błąd zapisu');
-      setSaved(true);
-      setTimeout(onDone, 900);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Błąd zapisu');
+      onSaved(data.status, data.product);
     } catch(e) {
-      setError('Błąd zapisu — spróbuj ponownie');
+      setError(e.message);
     } finally {
       setSaving(false);
     }
   }
 
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="loading-dots"><span/><span/><span/></div>
+    </div>
+  );
+
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <div className="header">
         <div className="header-top">
-          <div className="logo-icon">✏️</div>
+          <div className="logo-icon">{isNew ? '➕' : '✏️'}</div>
           <div>
             <div className="logo-text">NutriCart</div>
-            <div className="logo-sub">Oznacz produkt</div>
+            <div className="logo-sub">{isNew ? 'Nowy produkt' : 'Edytuj produkt'}</div>
           </div>
         </div>
       </div>
 
-      <div className="screen" style={{ flex: 1 }}>
+      <div className="screen">
+        {error && <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid var(--red)', borderRadius: 12, padding: 12, marginBottom: 16, color: 'var(--red)', fontSize: 13 }}>{error}</div>}
 
-        {/* Info o produkcie */}
-        <div className="result-card" style={{ marginBottom: 20 }}>
-          <div className="result-status created">✓ Produkt dodany do bazy</div>
-          <div className="result-body">
-            <div className="result-top">
-              {product.image_url
-                ? <img className="product-img" src={product.image_url} alt={product.name} />
-                : <div className="product-img-placeholder">🥫</div>
-              }
-              <div className="product-info">
-                {product.brand && <div className="product-brand">{product.brand}</div>}
-                <div className="product-name">
-                  {product.name}
-                  {product.nutriscore && <NutriScore grade={product.nutriscore} />}
-                </div>
-                <div className="product-category">{product.category || 'inne'}</div>
-              </div>
+        {/* Podgląd produktu */}
+        {preview && (
+          <div className="result-card" style={{ marginBottom: 20 }}>
+            <div className={`result-status ${isNew ? 'created' : 'existing'}`}>
+              {isNew ? '🆕 Nowy produkt z OpenFoodFacts' : '📦 Produkt już w bazie NutriCart'}
             </div>
-            <div className="macros-grid">
-              <MacroBox val={product.calories_per_100g} lbl="kcal" className="macro-kcal" />
-              <MacroBox val={product.protein_per_100g} lbl="białko g" />
-              <MacroBox val={product.carbs_per_100g} lbl="węglowo." />
-              <MacroBox val={product.fat_per_100g} lbl="tłuszcze g" />
+            <div className="result-body">
+              <div className="result-top">
+                {preview.image_url
+                  ? <img className="product-img" src={preview.image_url} alt={preview.name} />
+                  : <div className="product-img-placeholder">🥫</div>
+                }
+                <div className="product-info">
+                  {preview.brand && <div className="product-brand">{preview.brand}</div>}
+                  <div className="product-name">
+                    {preview.name}
+                    {preview.nutriscore && <NutriScore grade={preview.nutriscore} />}
+                  </div>
+                  <div className="product-category">{preview.category || 'inne'} {preview.quantity ? `· ${preview.quantity}` : ''}</div>
+                </div>
+              </div>
+              <div className="macros-grid">
+                <MacroBox val={preview.calories_per_100g} lbl="kcal" className="macro-kcal" />
+                <MacroBox val={preview.protein_per_100g} lbl="białko g" />
+                <MacroBox val={preview.carbs_per_100g} lbl="węglowo." />
+                <MacroBox val={preview.fat_per_100g} lbl="tłuszcze g" />
+              </div>
+              {preview.nova_group && (
+                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
+                  NOVA {preview.nova_group} · {['','nieprzetworzone','minimalnie przetworzone','przetworzone składniki','ultraprzetworzone'][preview.nova_group] || ''}
+                </div>
+              )}
+              <div className="barcode-display">BARCODE: {barcode}</div>
             </div>
           </div>
+        )}
+
+        {/* Wybór sklepów */}
+        <div className="section-label">Sklepy</div>
+        <div className="store-grid" style={{ marginBottom: 24 }}>
+          {stores.map(s => (
+            <button key={s.id}
+              className={`store-btn ${selectedStores.includes(s.id) ? 'active' : ''}`}
+              onClick={() => toggleStore(s.id)}>
+              {selectedStores.includes(s.id) ? '✓ ' : ''}{s.name}
+            </button>
+          ))}
         </div>
 
         {/* Gotowy do spożycia */}
         <div className="section-label">Gotowy do spożycia bez przygotowania?</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 24 }}>
           {[
-            { val: true,  label: '✅ Tak',        sub: 'jogurt, jabłko…' },
-            { val: false, label: '🍳 Nie',         sub: 'ryż, mąka…' },
-            { val: null,  label: '❓ Nie wiem',    sub: 'oznacz później' },
+            { val: true,  label: '✅ Tak',     sub: 'jogurt, jabłko…' },
+            { val: false, label: '🍳 Nie',      sub: 'ryż, mąka…' },
+            { val: null,  label: '❓ Nie wiem', sub: 'oznacz później' },
           ].map(opt => (
-            <button
-              key={String(opt.val)}
-              onClick={() => setReadyToEat(opt.val)}
+            <button key={String(opt.val)} onClick={() => setReadyToEat(opt.val)}
               style={{
-                padding: '12px 6px',
-                borderRadius: 12,
-                border: readyToEat === opt.val ? '2px solid var(--accent)' : '1px solid var(--border)',
-                background: readyToEat === opt.val ? 'rgba(34,211,238,0.08)' : 'var(--surface)',
+                padding: '12px 6px', borderRadius: 12, border: 'none', cursor: 'pointer',
+                background: readyToEat === opt.val ? 'rgba(34,211,238,0.12)' : 'var(--surface)',
+                outline: readyToEat === opt.val ? '2px solid var(--accent)' : '1px solid var(--border)',
                 color: readyToEat === opt.val ? 'var(--accent)' : 'var(--muted)',
-                cursor: 'pointer',
-                textAlign: 'center',
-                transition: 'all 0.15s',
-              }}
-            >
+                transition: 'all 0.15s', textAlign: 'center',
+              }}>
               <div style={{ fontSize: 13, fontWeight: 600 }}>{opt.label}</div>
               <div style={{ fontSize: 10, marginTop: 3, opacity: 0.7 }}>{opt.sub}</div>
             </button>
           ))}
         </div>
 
-        {/* Aktywuj */}
+        {/* Status */}
         <div className="section-label">Status w NutriCart</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 28 }}>
           {[
-            { val: true,  label: '🟢 Aktywny',      sub: 'pojawi się w planach' },
-            { val: false, label: '🔴 Nieaktywny',    sub: 'wymaga uzupełnienia' },
+            { val: true,  label: '🟢 Aktywny',   sub: 'widoczny w planach' },
+            { val: false, label: '🔴 Nieaktywny', sub: 'wymaga uzupełnienia' },
           ].map(opt => (
-            <button
-              key={String(opt.val)}
-              onClick={() => setActivate(opt.val)}
+            <button key={String(opt.val)} onClick={() => setActivate(opt.val)}
               style={{
-                padding: '12px 8px',
-                borderRadius: 12,
-                border: activate === opt.val ? '2px solid var(--green)' : '1px solid var(--border)',
+                padding: '12px 8px', borderRadius: 12, border: 'none', cursor: 'pointer',
                 background: activate === opt.val ? 'rgba(74,222,128,0.08)' : 'var(--surface)',
+                outline: activate === opt.val ? '2px solid var(--green)' : '1px solid var(--border)',
                 color: activate === opt.val ? 'var(--green)' : 'var(--muted)',
-                cursor: 'pointer',
-                textAlign: 'center',
-                transition: 'all 0.15s',
-              }}
-            >
+                transition: 'all 0.15s', textAlign: 'center',
+              }}>
               <div style={{ fontSize: 13, fontWeight: 600 }}>{opt.label}</div>
               <div style={{ fontSize: 10, marginTop: 3, opacity: 0.7 }}>{opt.sub}</div>
             </button>
           ))}
         </div>
 
-        {error && <div style={{ color: 'var(--red)', fontSize: 13, marginBottom: 12 }}>{error}</div>}
-
-        {saved ? (
-          <div style={{ textAlign: 'center', color: 'var(--green)', fontSize: 16, fontWeight: 700, padding: 16 }}>
-            ✓ Zapisano!
-          </div>
-        ) : (
-          <>
-            <button className="btn-primary" onClick={handleSave} disabled={saving}>
-              {saving ? 'Zapisuję...' : '💾 Zapisz i wróć do skanowania'}
-            </button>
-            <button className="btn-secondary" onClick={onDone}>
-              Pomiń — wróć do skanowania
-            </button>
-          </>
-        )}
+        <button className="btn-primary" onClick={handleSave} disabled={saving}>
+          {saving ? 'Zapisuję...' : (isNew ? '💾 Dodaj do bazy' : '💾 Zapisz zmiany')}
+        </button>
+        <button className="btn-secondary" onClick={onBack}>
+          ← Wróć bez zapisywania
+        </button>
       </div>
     </div>
   );
 }
 
-// ── Result Card (błędy i "już istnieje") ─────────────────────────────────────
-
-function ResultCard({ result }) {
-  const { status, product, message } = result;
-
-  if (status === 'error') {
-    return (
-      <div className="result-card">
-        <div className="result-status error">⚠ Błąd</div>
-        <div className="result-body">
-          <div style={{ color: 'var(--red)', fontSize: 14 }}>{message}</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (status === 'not_found') {
-    return (
-      <div className="result-card">
-        <div className="result-status error">✗ Nie znaleziono</div>
-        <div className="result-body">
-          <div style={{ fontSize: 14, color: 'var(--muted)' }}>
-            Produkt nie istnieje w bazie OpenFoodFacts.<br/>
-            Możesz go dodać ręcznie przez panel admina.
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // status === 'existing' — produkt był już w bazie
-  return (
-    <div className="result-card">
-      <div className="result-status existing">↻ Już w bazie — zaktualizowano sklep</div>
-      <div className="result-body">
-        <div className="result-top">
-          {product.image_url
-            ? <img className="product-img" src={product.image_url} alt={product.name} />
-            : <div className="product-img-placeholder">🥫</div>
-          }
-          <div className="product-info">
-            {product.brand && <div className="product-brand">{product.brand}</div>}
-            <div className="product-name">
-              {product.name}
-              {product.nutriscore && <NutriScore grade={product.nutriscore} />}
-            </div>
-            <div className="product-category">{product.category || 'inne'}</div>
-          </div>
-        </div>
-        <div className="macros-grid">
-          <MacroBox val={product.calories_per_100g} lbl="kcal" className="macro-kcal" />
-          <MacroBox val={product.protein_per_100g} lbl="białko g" />
-          <MacroBox val={product.carbs_per_100g} lbl="węglowo." />
-          <MacroBox val={product.fat_per_100g} lbl="tłuszcze g" />
-        </div>
-        <div className="barcode-display">BARCODE: {product.barcode}</div>
-      </div>
-    </div>
-  );
-}
-
-// ── Main App ───────────────────────────────────────────────────────────────────
+// ── Main App ──────────────────────────────────────────────────────────────────
 
 function App() {
   const [stores, setStores] = useState([]);
   const [selectedStore, setSelectedStore] = useState(null);
   const [scannerActive, setScannerActive] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [reviewProduct, setReviewProduct] = useState(null); // nowo dodany produkt do oznaczenia
   const [manualBarcode, setManualBarcode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [configBarcode, setConfigBarcode] = useState(null); // otwiera ekran konfiguracji
   const [toast, setToast] = useState('');
   const lastScanned = useRef('');
   const scanTimeout = useRef(null);
 
   useEffect(() => {
-    fetch(`${API_URL}/stores`)
-      .then(r => r.json())
-      .then(setStores)
+    fetch(`${API_URL}/stores`).then(r => r.json()).then(setStores)
       .catch(() => showToast('Błąd ładowania sklepów'));
   }, []);
 
@@ -846,53 +805,40 @@ function App() {
     setTimeout(() => setToast(''), 2500);
   }
 
-  function backToScanner() {
-    setReviewProduct(null);
-    setResult(null);
-    setManualBarcode('');
+  function openConfig(barcode) {
+    setScannerActive(false);
+    setConfigBarcode(barcode);
   }
 
-  async function handleBarcode(barcode) {
+  function handleBarcode(barcode) {
     if (barcode === lastScanned.current) return;
     lastScanned.current = barcode;
     clearTimeout(scanTimeout.current);
     scanTimeout.current = setTimeout(() => { lastScanned.current = ''; }, 3000);
-    setScannerActive(false);
-    await lookupProduct(barcode);
+    openConfig(barcode);
   }
 
-  async function lookupProduct(barcode) {
-    if (!barcode.trim()) return;
-    setLoading(true);
-    setResult(null);
-
-    try {
-      const url = `${API_URL}/scan/${barcode}${selectedStore ? `?store_id=${selectedStore}` : ''}`;
-      const res = await fetch(url);
-      const data = await res.json();
-
-      if (res.status === 404) {
-        setResult({ status: 'not_found', message: data.message });
-      } else if (!res.ok) {
-        setResult({ status: 'error', message: data.error });
-      } else if (data.status === 'created') {
-        // Nowy produkt — pokaż ekran oznaczania
-        setReviewProduct(data.product);
-      } else {
-        // Istniejący produkt — pokaż kartę z info
-        setResult(data);
-        showToast('↻ Sklep zaktualizowany');
-      }
-    } catch (err) {
-      setResult({ status: 'error', message: 'Błąd połączenia z API' });
-    } finally {
-      setLoading(false);
-    }
+  function handleManual() {
+    if (!manualBarcode.trim()) return;
+    openConfig(manualBarcode.trim());
   }
 
-  // Jeśli jest nowy produkt do oznaczenia — pokaż ReviewScreen
-  if (reviewProduct) {
-    return <ReviewScreen product={reviewProduct} onDone={backToScanner} />;
+  function handleSaved(status, product) {
+    setConfigBarcode(null);
+    setManualBarcode('');
+    showToast(status === 'created' ? '✓ Produkt dodany!' : '✓ Zmiany zapisane!');
+  }
+
+  // Ekran konfiguracji
+  if (configBarcode) {
+    return (
+      <ConfigScreen
+        barcode={configBarcode}
+        stores={stores}
+        onSaved={handleSaved}
+        onBack={() => { setConfigBarcode(null); }}
+      />
+    );
   }
 
   return (
@@ -910,59 +856,25 @@ function App() {
       </div>
 
       <div className="screen">
-
-        <div className="section-label">Wybrany sklep</div>
-        <div className="store-grid">
-          {stores.map(s => (
-            <button
-              key={s.id}
-              className={`store-btn ${selectedStore === s.id ? 'active' : ''}`}
-              onClick={() => setSelectedStore(selectedStore === s.id ? null : s.id)}
-            >
-              {s.name}
-            </button>
-          ))}
-        </div>
-
-        <div className="divider" />
-
         <div className="section-label">Skanowanie</div>
         <BarcodeScanner active={scannerActive} onDetected={handleBarcode} />
 
-        <button
-          className="btn-primary"
-          onClick={() => { setScannerActive(!scannerActive); setResult(null); }}
-        >
+        <button className="btn-primary"
+          onClick={() => setScannerActive(!scannerActive)}>
           {scannerActive ? '⏹ Zatrzymaj skaner' : '📷 Uruchom skaner'}
         </button>
 
         <div className="manual-input-wrap">
-          <input
-            className="manual-input"
-            type="text"
-            inputMode="numeric"
+          <input className="manual-input" type="text" inputMode="numeric"
             placeholder="lub wpisz kod kreskowy..."
             value={manualBarcode}
             onChange={e => setManualBarcode(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && lookupProduct(manualBarcode)}
-          />
-          <button
-            className="manual-btn"
-            onClick={() => lookupProduct(manualBarcode)}
-            disabled={!manualBarcode.trim() || loading}
-          >
-            →
-          </button>
+            onKeyDown={e => e.key === 'Enter' && handleManual()} />
+          <button className="manual-btn" onClick={handleManual}
+            disabled={!manualBarcode.trim()}>→</button>
         </div>
 
-        {loading && (
-          <div className="loading-dots">
-            <span/><span/><span/>
-          </div>
-        )}
-
-        {result && <ResultCard result={result} />}
-
+        {loading && <div className="loading-dots"><span/><span/><span/></div>}
       </div>
     </div>
   );
