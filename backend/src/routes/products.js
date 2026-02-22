@@ -119,3 +119,32 @@ router.delete('/:id', async (req, res) => {
 });
 
 module.exports = router;
+
+// PATCH /api/products/:id/quick-update - szybka aktualizacja statusu i gotowości
+// Używane przez skaner po dodaniu produktu
+router.patch('/:id/quick-update', async (req, res) => {
+  try {
+    const { status, is_ready_to_eat } = req.body;
+    const allowed_statuses = ['active', 'inactive_incomplete', 'inactive_deleted'];
+
+    if (status && !allowed_statuses.includes(status)) {
+      return res.status(400).json({ error: 'Nieprawidłowy status' });
+    }
+
+    const fields = [];
+    const values = [];
+
+    if (status !== undefined) { fields.push('status = ?'); values.push(status); }
+    if (is_ready_to_eat !== undefined) { fields.push('is_ready_to_eat = ?'); values.push(is_ready_to_eat); }
+
+    if (!fields.length) return res.status(400).json({ error: 'Brak pól do aktualizacji' });
+
+    values.push(req.params.id);
+    await db.query(`UPDATE products SET ${fields.join(', ')} WHERE id = ?`, values);
+
+    const [rows] = await db.query('SELECT id, name, status, is_ready_to_eat FROM products WHERE id = ?', [req.params.id]);
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});

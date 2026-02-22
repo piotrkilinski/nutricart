@@ -610,7 +610,156 @@ function BarcodeScanner({ onDetected, active }) {
   );
 }
 
-// ── Result Card ───────────────────────────────────────────────────────────────
+// ── Review Screen — pojawia się po dodaniu nowego produktu ───────────────────
+
+function ReviewScreen({ product, onDone }) {
+  const [readyToEat, setReadyToEat] = useState(null);   // null | true | false
+  const [activate, setActivate] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSave() {
+    setSaving(true);
+    setError('');
+    try {
+      const body = {
+        is_ready_to_eat: readyToEat === null ? null : (readyToEat ? 1 : 0),
+        status: activate ? 'active' : 'inactive_incomplete',
+      };
+      const res = await fetch(`${API_URL}/products/${product.id}/quick-update`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error('Błąd zapisu');
+      setSaved(true);
+      setTimeout(onDone, 900);
+    } catch(e) {
+      setError('Błąd zapisu — spróbuj ponownie');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+      <div className="header">
+        <div className="header-top">
+          <div className="logo-icon">✏️</div>
+          <div>
+            <div className="logo-text">NutriCart</div>
+            <div className="logo-sub">Oznacz produkt</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="screen" style={{ flex: 1 }}>
+
+        {/* Info o produkcie */}
+        <div className="result-card" style={{ marginBottom: 20 }}>
+          <div className="result-status created">✓ Produkt dodany do bazy</div>
+          <div className="result-body">
+            <div className="result-top">
+              {product.image_url
+                ? <img className="product-img" src={product.image_url} alt={product.name} />
+                : <div className="product-img-placeholder">🥫</div>
+              }
+              <div className="product-info">
+                {product.brand && <div className="product-brand">{product.brand}</div>}
+                <div className="product-name">
+                  {product.name}
+                  {product.nutriscore && <NutriScore grade={product.nutriscore} />}
+                </div>
+                <div className="product-category">{product.category || 'inne'}</div>
+              </div>
+            </div>
+            <div className="macros-grid">
+              <MacroBox val={product.calories_per_100g} lbl="kcal" className="macro-kcal" />
+              <MacroBox val={product.protein_per_100g} lbl="białko g" />
+              <MacroBox val={product.carbs_per_100g} lbl="węglowo." />
+              <MacroBox val={product.fat_per_100g} lbl="tłuszcze g" />
+            </div>
+          </div>
+        </div>
+
+        {/* Gotowy do spożycia */}
+        <div className="section-label">Gotowy do spożycia bez przygotowania?</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 24 }}>
+          {[
+            { val: true,  label: '✅ Tak',        sub: 'jogurt, jabłko…' },
+            { val: false, label: '🍳 Nie',         sub: 'ryż, mąka…' },
+            { val: null,  label: '❓ Nie wiem',    sub: 'oznacz później' },
+          ].map(opt => (
+            <button
+              key={String(opt.val)}
+              onClick={() => setReadyToEat(opt.val)}
+              style={{
+                padding: '12px 6px',
+                borderRadius: 12,
+                border: readyToEat === opt.val ? '2px solid var(--accent)' : '1px solid var(--border)',
+                background: readyToEat === opt.val ? 'rgba(34,211,238,0.08)' : 'var(--surface)',
+                color: readyToEat === opt.val ? 'var(--accent)' : 'var(--muted)',
+                cursor: 'pointer',
+                textAlign: 'center',
+                transition: 'all 0.15s',
+              }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{opt.label}</div>
+              <div style={{ fontSize: 10, marginTop: 3, opacity: 0.7 }}>{opt.sub}</div>
+            </button>
+          ))}
+        </div>
+
+        {/* Aktywuj */}
+        <div className="section-label">Status w NutriCart</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 28 }}>
+          {[
+            { val: true,  label: '🟢 Aktywny',      sub: 'pojawi się w planach' },
+            { val: false, label: '🔴 Nieaktywny',    sub: 'wymaga uzupełnienia' },
+          ].map(opt => (
+            <button
+              key={String(opt.val)}
+              onClick={() => setActivate(opt.val)}
+              style={{
+                padding: '12px 8px',
+                borderRadius: 12,
+                border: activate === opt.val ? '2px solid var(--green)' : '1px solid var(--border)',
+                background: activate === opt.val ? 'rgba(74,222,128,0.08)' : 'var(--surface)',
+                color: activate === opt.val ? 'var(--green)' : 'var(--muted)',
+                cursor: 'pointer',
+                textAlign: 'center',
+                transition: 'all 0.15s',
+              }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{opt.label}</div>
+              <div style={{ fontSize: 10, marginTop: 3, opacity: 0.7 }}>{opt.sub}</div>
+            </button>
+          ))}
+        </div>
+
+        {error && <div style={{ color: 'var(--red)', fontSize: 13, marginBottom: 12 }}>{error}</div>}
+
+        {saved ? (
+          <div style={{ textAlign: 'center', color: 'var(--green)', fontSize: 16, fontWeight: 700, padding: 16 }}>
+            ✓ Zapisano!
+          </div>
+        ) : (
+          <>
+            <button className="btn-primary" onClick={handleSave} disabled={saving}>
+              {saving ? 'Zapisuję...' : '💾 Zapisz i wróć do skanowania'}
+            </button>
+            <button className="btn-secondary" onClick={onDone}>
+              Pomiń — wróć do skanowania
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Result Card (błędy i "już istnieje") ─────────────────────────────────────
 
 function ResultCard({ result }) {
   const { status, product, message } = result;
@@ -640,11 +789,10 @@ function ResultCard({ result }) {
     );
   }
 
+  // status === 'existing' — produkt był już w bazie
   return (
     <div className="result-card">
-      <div className={`result-status ${status}`}>
-        {status === 'created' ? '✓ Dodano do bazy' : '↻ Już w bazie — zaktualizowano sklep'}
-      </div>
+      <div className="result-status existing">↻ Już w bazie — zaktualizowano sklep</div>
       <div className="result-body">
         <div className="result-top">
           {product.image_url
@@ -660,14 +808,12 @@ function ResultCard({ result }) {
             <div className="product-category">{product.category || 'inne'}</div>
           </div>
         </div>
-
         <div className="macros-grid">
           <MacroBox val={product.calories_per_100g} lbl="kcal" className="macro-kcal" />
           <MacroBox val={product.protein_per_100g} lbl="białko g" />
           <MacroBox val={product.carbs_per_100g} lbl="węglowo." />
           <MacroBox val={product.fat_per_100g} lbl="tłuszcze g" />
         </div>
-
         <div className="barcode-display">BARCODE: {product.barcode}</div>
       </div>
     </div>
@@ -682,6 +828,7 @@ function App() {
   const [scannerActive, setScannerActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [reviewProduct, setReviewProduct] = useState(null); // nowo dodany produkt do oznaczenia
   const [manualBarcode, setManualBarcode] = useState('');
   const [toast, setToast] = useState('');
   const lastScanned = useRef('');
@@ -699,13 +846,17 @@ function App() {
     setTimeout(() => setToast(''), 2500);
   }
 
+  function backToScanner() {
+    setReviewProduct(null);
+    setResult(null);
+    setManualBarcode('');
+  }
+
   async function handleBarcode(barcode) {
-    // Zapobiegaj wielokrotnemu skanowaniu tego samego kodu
     if (barcode === lastScanned.current) return;
     lastScanned.current = barcode;
     clearTimeout(scanTimeout.current);
     scanTimeout.current = setTimeout(() => { lastScanned.current = ''; }, 3000);
-
     setScannerActive(false);
     await lookupProduct(barcode);
   }
@@ -721,18 +872,27 @@ function App() {
       const data = await res.json();
 
       if (res.status === 404) {
-        setResult({ status: 'not_found', message: data.error });
+        setResult({ status: 'not_found', message: data.message });
       } else if (!res.ok) {
         setResult({ status: 'error', message: data.error });
+      } else if (data.status === 'created') {
+        // Nowy produkt — pokaż ekran oznaczania
+        setReviewProduct(data.product);
       } else {
+        // Istniejący produkt — pokaż kartę z info
         setResult(data);
-        showToast(data.status === 'created' ? '✓ Produkt dodany!' : '↻ Sklep zaktualizowany');
+        showToast('↻ Sklep zaktualizowany');
       }
     } catch (err) {
       setResult({ status: 'error', message: 'Błąd połączenia z API' });
     } finally {
       setLoading(false);
     }
+  }
+
+  // Jeśli jest nowy produkt do oznaczenia — pokaż ReviewScreen
+  if (reviewProduct) {
+    return <ReviewScreen product={reviewProduct} onDone={backToScanner} />;
   }
 
   return (
@@ -751,7 +911,6 @@ function App() {
 
       <div className="screen">
 
-        {/* Wybór sklepu */}
         <div className="section-label">Wybrany sklep</div>
         <div className="store-grid">
           {stores.map(s => (
@@ -767,7 +926,6 @@ function App() {
 
         <div className="divider" />
 
-        {/* Scanner */}
         <div className="section-label">Skanowanie</div>
         <BarcodeScanner active={scannerActive} onDetected={handleBarcode} />
 
@@ -778,7 +936,6 @@ function App() {
           {scannerActive ? '⏹ Zatrzymaj skaner' : '📷 Uruchom skaner'}
         </button>
 
-        {/* Ręczne wprowadzanie */}
         <div className="manual-input-wrap">
           <input
             className="manual-input"
@@ -798,14 +955,12 @@ function App() {
           </button>
         </div>
 
-        {/* Loading */}
         {loading && (
           <div className="loading-dots">
             <span/><span/><span/>
           </div>
         )}
 
-        {/* Wynik */}
         {result && <ResultCard result={result} />}
 
       </div>
