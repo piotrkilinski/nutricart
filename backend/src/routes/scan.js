@@ -132,6 +132,8 @@ router.get('/:barcode', async (req, res) => {
       image_ingredients_url: p.image_ingredients_url || null,
 
       off_data: JSON.stringify(offData.product),
+      status: 'inactive_incomplete',
+      is_ready_to_eat: null,
     };
 
     // Dynamiczny INSERT — kolumny i wartości generowane z obiektu

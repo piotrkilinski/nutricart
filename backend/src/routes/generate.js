@@ -41,7 +41,8 @@ router.post('/', async (req, res) => {
        JOIN product_stores ps ON p.id = ps.product_id
        WHERE ps.store_id IN (${placeholders})
          AND p.status = 'active'
-         AND p.calories_per_100g IS NOT NULL`,
+         AND p.calories_per_100g IS NOT NULL
+         AND p.is_ready_to_eat = 1`,
       store_ids
     );
 
