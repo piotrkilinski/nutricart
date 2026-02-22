@@ -116,7 +116,7 @@ function SettingsScreen({ onGenerate }) {
   const [selected, setSelected] = useState([]);
   const [calories, setCalories] = useState('2000');
   const [modes, setModes] = useState({
-    breakfast: 'meal', lunch: 'meal', dinner: 'meal', snack: 'meal'
+    breakfast: 'products', lunch: 'products', dinner: 'products', snack: 'products'
   });
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -185,7 +185,7 @@ function SettingsScreen({ onGenerate }) {
                 <span style={s.modeLabel}>{label}</span>
                 <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2, marginLeft: 26 }}>
                   {modes[key] === 'meal'
-                    ? 'Przygotowany przepis z bazy'
+                    ? 'Przepis + ewentualne dopełnienie gotowym produktem'
                     : 'Gotowe produkty dobrane kaloryjnie'}
                 </div>
               </div>
@@ -249,7 +249,9 @@ function PlanScreen({ plan, onBack }) {
             <div>
               <div style={s.mealType}>{meal.type_label}</div>
               <div style={s.modeLabel}>
-                {meal.mode === 'products' ? '🛒 gotowe produkty' : '🍳 przepis'}
+                {meal.mode === 'products'
+                  ? (meal.source === 'snack_meal' ? '🍱 gotowy zestaw' : '🛒 gotowe produkty')
+                  : (meal.topping_added ? '🍳 przepis + dodatek' : '🍳 przepis')}
               </div>
               <div style={s.mealName}>{meal.name || 'Zestaw produktów'}</div>
             </div>
