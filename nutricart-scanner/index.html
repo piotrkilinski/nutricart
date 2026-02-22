@@ -2192,7 +2192,8 @@ function GenericProductsScreen({ stores, onBack, onHome }) {
     setLoading(true);
     try {
       const res = await fetch(`${API}/products/generic`);
-      setProducts(await res.json());
+      const data = await res.json();
+      setProducts(Array.isArray(data) ? data : []);
     } catch(e) {}
     finally { setLoading(false); }
   }
