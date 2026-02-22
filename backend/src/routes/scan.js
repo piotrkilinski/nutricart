@@ -107,9 +107,9 @@ router.get('/:barcode', async (req, res) => {
       additives: p.additives_tags?.length ? JSON.stringify(p.additives_tags) : null,
 
       // Oceny
-      nutriscore: p.nutrition_grades?.toUpperCase() || null,
+      nutriscore: p.nutrition_grades ? p.nutrition_grades.trim().toUpperCase().charAt(0) : null,
       nova_group: p.nova_group || null,
-      ecoscore: p.ecoscore_grade?.toUpperCase() || null,
+      ecoscore: p.ecoscore_grade ? p.ecoscore_grade.trim().toUpperCase().charAt(0) : null,
 
       // Preferencje dietetyczne
       is_vegan: attrs.vegan ?? inferFromLabels(labels, ['en:vegan']),
