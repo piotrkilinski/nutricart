@@ -10,9 +10,9 @@ app.use('/api/stores', require('./routes/stores'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/meals', require('./routes/meals'));
 app.use('/api/generate', require('./routes/generate'));
+app.use('/api/scan', require('./routes/scan'));
 
 app.get('/', (req, res) => res.json({ status: 'NutriCart API dziala' }));
 
 const PORT = process.env.PORT || 3001;
-PORT = 8080;
 app.listen(PORT, () => console.log(`API dziala na porcie ${PORT}`));

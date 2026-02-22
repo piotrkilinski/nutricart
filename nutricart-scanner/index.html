@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>NutriCart Scanner</title>
+  <link rel="manifest" href="#" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <!-- ZXing dla skanowania kodów kreskowych -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/zxing-library/0.19.1/zxing.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root {
+      --bg: #0a0f1e;
+      --surface: #111827;
+      --surface2: #1e2a3a;
+      --accent: #22d3ee;
+      --accent2: #a78bfa;
+      --green: #4ade80;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --text: #f1f5f9;
+      --muted: #64748b;
+      --border: #1e3a5f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    #root {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Header */
+    .header {
+      padding: 20px 16px 16px;
+      background: linear-gradient(180deg, #0f1729 0%, transparent 100%);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(34, 211, 238, 0.1);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+
+    /* Screen */
+    .screen { padding: 16px; }
+
+    /* Store selector */
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .store-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .store-btn {
+      padding: 10px 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .store-btn.active {
+      border-color: var(--accent);
+      background: rgba(34, 211, 238, 0.08);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* Scanner area */
+    .scanner-box {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scanner-box video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .scanner-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .scan-frame {
+      width: 200px;
+      height: 120px;
+      position: relative;
+    }
+
+    .scan-frame::before, .scan-frame::after,
+    .scan-frame-inner::before, .scan-frame-inner::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-color: var(--accent);
+      border-style: solid;
+    }
+
+    .scan-frame::before { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
+    .scan-frame::after { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 4px 0 0; }
+    .scan-frame-inner::before { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0 0 0 4px; }
+    .scan-frame-inner::after { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+
+    .scan-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: scanLine 2s ease-in-out infinite;
+      top: 0;
+    }
+
+    @keyframes scanLine {
+      0% { top: 0%; opacity: 1; }
+      50% { top: 100%; opacity: 0.5; }
+      100% { top: 0%; opacity: 1; }
+    }
+
+    .scan-hint {
+      margin-top: 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: rgba(34, 211, 238, 0.7);
+      letter-spacing: 1px;
+    }
+
+    .scanner-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 40px;
+    }
+
+    .scanner-icon {
+      font-size: 48px;
+      opacity: 0.4;
+    }
+
+    .scanner-start-text {
+      font-size: 14px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), #0891b2);
+      color: #0a0f1e;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--accent);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 10px;
+    }
+
+    /* Manual input */
+    .manual-input-wrap {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .manual-input {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .manual-input:focus { border-color: var(--accent); }
+    .manual-input::placeholder { color: var(--muted); }
+
+    .manual-btn {
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #0a0f1e;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    /* Result card */
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-status {
+      padding: 10px 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .result-status.created { background: rgba(74, 222, 128, 0.1); color: var(--green); }
+    .result-status.existing { background: rgba(167, 139, 250, 0.1); color: var(--accent2); }
+    .result-status.error { background: rgba(248, 113, 113, 0.1); color: var(--red); }
+
+    .result-body {
+      padding: 16px;
+    }
+
+    .result-top {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .product-img {
+      width: 70px;
+      height: 70px;
+      border-radius: 12px;
+      object-fit: contain;
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+
+    .product-img-placeholder {
+      width: 70px;
+      height: 70px;
+      border-radius: 12px;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .product-info { flex: 1; min-width: 0; }
+
+    .product-brand {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .product-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .product-category {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .nutriscore {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      margin-left: 8px;
+    }
+
+    .nutriscore-a { background: #1a7a1a; color: white; }
+    .nutriscore-b { background: #5aaa15; color: white; }
+    .nutriscore-c { background: #f0a500; color: white; }
+    .nutriscore-d { background: #e6791f; color: white; }
+    .nutriscore-e { background: #cc1212; color: white; }
+
+    /* Macros */
+    .macros-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .macro-box {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+
+    .macro-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .macro-lbl {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .macro-kcal .macro-val { color: var(--accent); }
+
+    /* Barcode display */
+    .barcode-display {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 16px 0;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 13px;
+      z-index: 100;
+      animation: fadeInOut 2.5s ease forwards;
+      white-space: nowrap;
+      backdrop-filter: blur(8px);
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      75% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-5px); }
+    }
+
+    .loading-dots {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .loading-dots span {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: bounce 1.2s infinite;
+    }
+
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const API_URL = 'https://nutricart-production.up.railway.app/api';
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function NutriScore({ grade }) {
+  if (!grade) return null;
+  const g = grade.toUpperCase();
+  return <span className={`nutriscore nutriscore-${g.toLowerCase()}`}>N{g}</span>;
+}
+
+function MacroBox({ val, lbl, className }) {
+  return (
+    <div className={`macro-box ${className || ''}`}>
+      <div className="macro-val">{val != null ? Math.round(val) : '—'}</div>
+      <div className="macro-lbl">{lbl}</div>
+    </div>
+  );
+}
+
+// ── Scanner Component ────────────────────────────────────────────────────────
+
+function BarcodeScanner({ onDetected, active }) {
+  const videoRef = useRef(null);
+  const readerRef = useRef(null);
+  const streamRef = useRef(null);
+
+  useEffect(() => {
+    if (!active) {
+      stopCamera();
+      return;
+    }
+    startCamera();
+    return () => stopCamera();
+  }, [active]);
+
+  async function startCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+
+      // Inicjalizuj ZXing
+      if (window.ZXing) {
+        const hints = new window.ZXing.Map();
+        const formats = [
+          window.ZXing.BarcodeFormat.EAN_13,
+          window.ZXing.BarcodeFormat.EAN_8,
+          window.ZXing.BarcodeFormat.CODE_128,
+        ];
+        hints.set(window.ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+        const reader = new window.ZXing.BrowserMultiFormatReader(hints);
+        readerRef.current = reader;
+
+        reader.decodeFromVideoElement(videoRef.current, (result, err) => {
+          if (result) {
+            onDetected(result.getText());
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Camera error:', err);
+    }
+  }
+
+  function stopCamera() {
+    if (readerRef.current) {
+      try { readerRef.current.reset(); } catch(e) {}
+      readerRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+  }
+
+  return (
+    <div className="scanner-box">
+      <video ref={videoRef} muted playsInline style={{ display: active ? 'block' : 'none' }} />
+      {active ? (
+        <div className="scanner-overlay">
+          <div className="scan-frame">
+            <div className="scan-frame-inner" />
+            <div className="scan-line" />
+          </div>
+          <div className="scan-hint">SKIERUJ KAMERĘ NA KOD KRESKOWY</div>
+        </div>
+      ) : (
+        <div className="scanner-placeholder">
+          <div className="scanner-icon">📷</div>
+          <div className="scanner-start-text">
+            Kliknij "Uruchom skaner"<br/>aby zeskanować kod kreskowy
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Result Card ───────────────────────────────────────────────────────────────
+
+function ResultCard({ result }) {
+  const { status, product, message } = result;
+
+  if (status === 'error') {
+    return (
+      <div className="result-card">
+        <div className="result-status error">⚠ Błąd</div>
+        <div className="result-body">
+          <div style={{ color: 'var(--red)', fontSize: 14 }}>{message}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'not_found') {
+    return (
+      <div className="result-card">
+        <div className="result-status error">✗ Nie znaleziono</div>
+        <div className="result-body">
+          <div style={{ fontSize: 14, color: 'var(--muted)' }}>
+            Produkt nie istnieje w bazie OpenFoodFacts.<br/>
+            Możesz go dodać ręcznie przez panel admina.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="result-card">
+      <div className={`result-status ${status}`}>
+        {status === 'created' ? '✓ Dodano do bazy' : '↻ Już w bazie — zaktualizowano sklep'}
+      </div>
+      <div className="result-body">
+        <div className="result-top">
+          {product.image_url
+            ? <img className="product-img" src={product.image_url} alt={product.name} />
+            : <div className="product-img-placeholder">🥫</div>
+          }
+          <div className="product-info">
+            {product.brand && <div className="product-brand">{product.brand}</div>}
+            <div className="product-name">
+              {product.name}
+              {product.nutriscore && <NutriScore grade={product.nutriscore} />}
+            </div>
+            <div className="product-category">{product.category || 'inne'}</div>
+          </div>
+        </div>
+
+        <div className="macros-grid">
+          <MacroBox val={product.calories_per_100g} lbl="kcal" className="macro-kcal" />
+          <MacroBox val={product.protein_per_100g} lbl="białko g" />
+          <MacroBox val={product.carbs_per_100g} lbl="węglowo." />
+          <MacroBox val={product.fat_per_100g} lbl="tłuszcze g" />
+        </div>
+
+        <div className="barcode-display">BARCODE: {product.barcode}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main App ───────────────────────────────────────────────────────────────────
+
+export default function App() {
+  const [stores, setStores] = useState([]);
+  const [selectedStore, setSelectedStore] = useState(null);
+  const [scannerActive, setScannerActive] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [manualBarcode, setManualBarcode] = useState('');
+  const [toast, setToast] = useState('');
+  const lastScanned = useRef('');
+  const scanTimeout = useRef(null);
+
+  useEffect(() => {
+    fetch(`${API_URL}/stores`)
+      .then(r => r.json())
+      .then(setStores)
+      .catch(() => showToast('Błąd ładowania sklepów'));
+  }, []);
+
+  function showToast(msg) {
+    setToast(msg);
+    setTimeout(() => setToast(''), 2500);
+  }
+
+  async function handleBarcode(barcode) {
+    // Zapobiegaj wielokrotnemu skanowaniu tego samego kodu
+    if (barcode === lastScanned.current) return;
+    lastScanned.current = barcode;
+    clearTimeout(scanTimeout.current);
+    scanTimeout.current = setTimeout(() => { lastScanned.current = ''; }, 3000);
+
+    setScannerActive(false);
+    await lookupProduct(barcode);
+  }
+
+  async function lookupProduct(barcode) {
+    if (!barcode.trim()) return;
+    setLoading(true);
+    setResult(null);
+
+    try {
+      const url = `${API_URL}/scan/${barcode}${selectedStore ? `?store_id=${selectedStore}` : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (res.status === 404) {
+        setResult({ status: 'not_found', message: data.error });
+      } else if (!res.ok) {
+        setResult({ status: 'error', message: data.error });
+      } else {
+        setResult(data);
+        showToast(data.status === 'created' ? '✓ Produkt dodany!' : '↻ Sklep zaktualizowany');
+      }
+    } catch (err) {
+      setResult({ status: 'error', message: 'Błąd połączenia z API' });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div>
+      {toast && <div className="toast">{toast}</div>}
+
+      <div className="header">
+        <div className="header-top">
+          <div className="logo-icon">📡</div>
+          <div>
+            <div className="logo-text">NutriCart</div>
+            <div className="logo-sub">Product Scanner</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="screen">
+
+        {/* Wybór sklepu */}
+        <div className="section-label">Wybrany sklep</div>
+        <div className="store-grid">
+          {stores.map(s => (
+            <button
+              key={s.id}
+              className={`store-btn ${selectedStore === s.id ? 'active' : ''}`}
+              onClick={() => setSelectedStore(selectedStore === s.id ? null : s.id)}
+            >
+              {s.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="divider" />
+
+        {/* Scanner */}
+        <div className="section-label">Skanowanie</div>
+        <BarcodeScanner active={scannerActive} onDetected={handleBarcode} />
+
+        <button
+          className="btn-primary"
+          onClick={() => { setScannerActive(!scannerActive); setResult(null); }}
+        >
+          {scannerActive ? '⏹ Zatrzymaj skaner' : '📷 Uruchom skaner'}
+        </button>
+
+        {/* Ręczne wprowadzanie */}
+        <div className="manual-input-wrap">
+          <input
+            className="manual-input"
+            type="text"
+            inputMode="numeric"
+            placeholder="lub wpisz kod kreskowy..."
+            value={manualBarcode}
+            onChange={e => setManualBarcode(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && lookupProduct(manualBarcode)}
+          />
+          <button
+            className="manual-btn"
+            onClick={() => lookupProduct(manualBarcode)}
+            disabled={!manualBarcode.trim() || loading}
+          >
+            →
+          </button>
+        </div>
+
+        {/* Loading */}
+        {loading && (
+          <div className="loading-dots">
+            <span/><span/><span/>
+          </div>
+        )}
+
+        {/* Wynik */}
+        {result && <ResultCard result={result} />}
+
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
