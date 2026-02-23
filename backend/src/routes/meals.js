@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// GET /api/meals - lista posilkow ze skladnikami
+// GET /api/meals
 router.get('/', async (req, res) => {
   try {
     const [meals] = await db.query('SELECT * FROM meals ORDER BY meal_type, name');
@@ -23,9 +23,9 @@ router.get('/', async (req, res) => {
 
     result.forEach(meal => {
       meal.total_calories = meal.ingredients.reduce((sum, i) => sum + i.calories, 0);
-      meal.total_protein = meal.ingredients.reduce((sum, i) => sum + calcNutrient(i, 'protein_per_100g'), 0);
-      meal.total_carbs = meal.ingredients.reduce((sum, i) => sum + calcNutrient(i, 'carbs_per_100g'), 0);
-      meal.total_fat = meal.ingredients.reduce((sum, i) => sum + calcNutrient(i, 'fat_per_100g'), 0);
+      meal.total_protein  = meal.ingredients.reduce((sum, i) => sum + calcNutrient(i, 'protein_per_100g'), 0);
+      meal.total_carbs    = meal.ingredients.reduce((sum, i) => sum + calcNutrient(i, 'carbs_per_100g'), 0);
+      meal.total_fat      = meal.ingredients.reduce((sum, i) => sum + calcNutrient(i, 'fat_per_100g'), 0);
     });
 
     res.json(result);
@@ -35,33 +35,29 @@ router.get('/', async (req, res) => {
 });
 
 function getWeightInGrams(ingredient) {
-  if (ingredient.unit === 'piece') {
-    return ingredient.quantity * (ingredient.serving_weight_g || 100);
-  }
+  if (ingredient.unit === 'piece') return ingredient.quantity * (ingredient.serving_weight_g || 100);
   if (ingredient.unit === 'tbsp') return ingredient.quantity * 14;
-  if (ingredient.unit === 'tsp') return ingredient.quantity * 5;
-  if (ingredient.unit === 'cup') return ingredient.quantity * 240;
-  return ingredient.quantity; // g lub ml
+  if (ingredient.unit === 'tsp')  return ingredient.quantity * 5;
+  if (ingredient.unit === 'cup')  return ingredient.quantity * 240;
+  return ingredient.quantity;
 }
-
 function calcCalories(ingredient) {
   const grams = getWeightInGrams(ingredient);
   return Math.round((grams / 100) * ingredient.calories_per_100g);
 }
-
 function calcNutrient(ingredient, field) {
   const grams = getWeightInGrams(ingredient);
   return Math.round((grams / 100) * ingredient[field] * 10) / 10;
 }
 
-// POST /api/meals - dodaj posilek
+// POST /api/meals
 router.post('/', async (req, res) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
     const { name, meal_type, description, ingredients = [] } = req.body;
     const [result] = await conn.query(
-      'INSERT INTO meals (name, meal_type, description) VALUES (?, ?, ?)',
+      'INSERT INTO meals (name, meal_type, description, status) VALUES (?, ?, ?, "active")',
       [name, meal_type, description]
     );
     const mealId = result.insertId;
@@ -108,10 +104,24 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// PATCH /api/meals/:id/toggle  — przełącz active/inactive
+router.patch('/:id/toggle', async (req, res) => {
+  try {
+    const [[meal]] = await db.query('SELECT status FROM meals WHERE id=?', [req.params.id]);
+    if (!meal) return res.status(404).json({ error: 'Nie znaleziono' });
+    const newStatus = meal.status === 'active' ? 'inactive' : 'active';
+    await db.query('UPDATE meals SET status=? WHERE id=?', [newStatus, req.params.id]);
+    res.json({ id: Number(req.params.id), status: newStatus });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /api/meals/:id
 router.delete('/:id', async (req, res) => {
   try {
-    await db.query('DELETE FROM meals WHERE id = ?', [req.params.id]);
+    await db.query('DELETE FROM meal_ingredients WHERE meal_id=?', [req.params.id]);
+    await db.query('DELETE FROM meals WHERE id=?', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
