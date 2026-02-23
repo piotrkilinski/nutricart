@@ -214,6 +214,75 @@ function SettingsScreen({ onGenerate }) {
 
 // ── Plan Screen ───────────────────────────────────────────────────────────────
 
+// Pojedyncza karta posiłku z własnym stanem zwinięcia
+function MealCard({ meal }) {
+  const [open, setOpen] = useState(false);
+
+  const modeLabel = meal.mode === 'products'
+    ? (meal.source === 'snack_meal' ? '🍱 gotowy zestaw' : '🛒 gotowe produkty')
+    : (meal.topping_added ? '🍳 przepis + dodatek' : '🍳 przepis');
+
+  return (
+    <div style={s.mealCard}>
+      {/* Nagłówek — zawsze widoczny, klikalne */}
+      <div
+        onClick={() => setOpen(o => !o)}
+        style={{
+          ...s.mealHeader,
+          cursor: 'pointer',
+          borderBottom: open ? '1px solid #e5e7eb' : 'none',
+          userSelect: 'none',
+        }}
+      >
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={s.mealType}>{meal.type_label}</div>
+          <div style={s.modeLabel}>{modeLabel}</div>
+          <div style={{
+            ...s.mealName,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}>
+            {meal.name || 'Zestaw produktów'}
+          </div>
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
+          <div style={s.mealKcal}>{meal.total_calories}</div>
+          <div style={s.mealKcalLbl}>kcal</div>
+        </div>
+        {/* Chevron */}
+        <div style={{
+          marginLeft: 10, color: '#9ca3af', fontSize: 20, flexShrink: 0,
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 0.2s',
+          lineHeight: 1,
+        }}>▾</div>
+      </div>
+
+      {/* Szczegóły — tylko gdy otwarte */}
+      {open && (
+        meal.error ? (
+          <div style={{ padding: '12px 14px', color: '#dc2626', fontSize: 13 }}>
+            ⚠ {meal.error}
+          </div>
+        ) : (
+          <div style={s.ingredientList}>
+            {(meal.ingredients || []).map((ing, j) => (
+              <div key={j} style={s.ingredient}>
+                <span>{formatIngredient(ing)}</span>
+                <span style={{ color: '#9ca3af' }}>{ing.calories} kcal</span>
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: 12, paddingTop: 8, fontSize: 12, color: '#9ca3af' }}>
+              <span>B: {meal.total_protein}g</span>
+              <span>W: {meal.total_carbs}g</span>
+              <span>T: {meal.total_fat}g</span>
+            </div>
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
 function PlanScreen({ plan, onBack }) {
   return (
     <div style={s.screen}>
@@ -244,43 +313,7 @@ function PlanScreen({ plan, onBack }) {
       <div style={s.sectionTitle}>Plan posiłków</div>
 
       {plan.meals.map((meal, i) => (
-        <div key={i} style={s.mealCard}>
-          <div style={s.mealHeader}>
-            <div>
-              <div style={s.mealType}>{meal.type_label}</div>
-              <div style={s.modeLabel}>
-                {meal.mode === 'products'
-                  ? (meal.source === 'snack_meal' ? '🍱 gotowy zestaw' : '🛒 gotowe produkty')
-                  : (meal.topping_added ? '🍳 przepis + dodatek' : '🍳 przepis')}
-              </div>
-              <div style={s.mealName}>{meal.name || 'Zestaw produktów'}</div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={s.mealKcal}>{meal.total_calories}</div>
-              <div style={s.mealKcalLbl}>kcal</div>
-            </div>
-          </div>
-
-          {meal.error ? (
-            <div style={{ padding: '12px 14px', color: '#dc2626', fontSize: 13 }}>
-              ⚠ {meal.error}
-            </div>
-          ) : (
-            <div style={s.ingredientList}>
-              {(meal.ingredients || []).map((ing, j) => (
-                <div key={j} style={s.ingredient}>
-                  <span>{formatIngredient(ing)}</span>
-                  <span style={{ color: '#9ca3af' }}>{ing.calories} kcal</span>
-                </div>
-              ))}
-              <div style={{ display: 'flex', gap: 12, paddingTop: 8, fontSize: 12, color: '#9ca3af' }}>
-                <span>B: {meal.total_protein}g</span>
-                <span>W: {meal.total_carbs}g</span>
-                <span>T: {meal.total_fat}g</span>
-              </div>
-            </div>
-          )}
-        </div>
+        <MealCard key={i} meal={meal} />
       ))}
     </div>
   );

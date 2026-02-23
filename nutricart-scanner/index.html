@@ -2568,7 +2568,7 @@ const MENU = [
   { id:'saved',   icon:'🗂', title:'Zapisane kody',           sub:'Z poprzednich sesji' },
   { id:'stores',  icon:'🏪', title:'Sklepy',                  sub:'Zarządzaj sklepami' },
   { id:'planner', icon:'🍽', title:'Planer posiłków',          sub:'Komponuj i zapisuj przepisy' },
-  { id:'generics', icon:'🧬', title:'Produkty generyczne',       sub:'Szablony bez barkodów' },
+
 ];
 
 function App() {
@@ -2584,7 +2584,7 @@ function App() {
   if (screen === 'saved')    return <SavedBarcodesScreen {...screenProps}/>;
   if (screen === 'stores')   return <StoresScreen {...screenProps} reloadStores={reloadStores}/>;
   if (screen === 'planner')  return <MealPlannerScreen {...screenProps}/>;
-  if (screen === 'generics') return <GenericProductsScreen {...screenProps}/>;
+
 
   return (
     <div style={{minHeight:'100vh',background:'var(--bg)'}}>
