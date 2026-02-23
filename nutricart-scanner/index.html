@@ -1556,7 +1556,7 @@ function ProductsScreen({ stores, onBack, onHome }) {
 
   async function loadGenerics() {
     try {
-      const res = await fetch(\`\${API}/products/generic\`);
+      const res = await fetch(`${API}/products/generic`);
       const data = await res.json();
       setGenericProducts(Array.isArray(data) ? data : []);
     } catch(e) {}
