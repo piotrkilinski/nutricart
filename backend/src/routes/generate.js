@@ -209,7 +209,7 @@ function buildMealSlot(mealsForSlot, readyProducts, targetCal, productStores = {
     };
   }
 
-  const meal = pickClosest(mealsForSlot, targetCal);
+  const meal = pickRandomClose(mealsForSlot, targetCal);
   const gap = targetCal - meal.total_calories;
   const gapPercent = gap / targetCal;
 
@@ -366,6 +366,18 @@ function caloriesForProduct(product) {
 
 function calcNutrientProduct(product, field) {
   return (getServingG(product) / 100) * (product[field] || 0);
+}
+
+// Losuj przepis spośród kandydatów mieszczących się w 40% tolerancji targetu.
+// Jeśli żaden nie pasuje — losuj spośród wszystkich (zawsze inny wynik).
+function pickRandomClose(items, targetCal) {
+  if (!items.length) return null;
+  const TOLERANCE = 0.40;
+  const candidates = items.filter(m =>
+    Math.abs(m.total_calories - targetCal) / Math.max(targetCal, 1) <= TOLERANCE
+  );
+  const pool = candidates.length > 0 ? candidates : items;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function pickClosest(items, targetCal) {

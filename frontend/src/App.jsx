@@ -312,7 +312,24 @@ function MealCard({ meal, onRegenerate, regenerating }) {
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={s.mealType}>{meal.type_label}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={s.mealType}>{meal.type_label}</div>
+            {/* Przycisk przegeneruj — przy nazwie pory dnia */}
+            <button
+              onClick={e => { e.stopPropagation(); onRegenerate(meal.slot); }}
+              disabled={regenerating === meal.slot}
+              title="Wygeneruj inny posiłek"
+              style={{
+                width: 22, height: 22, borderRadius: 6,
+                border: '1px solid #e5e7eb', background: 'white',
+                color: regenerating === meal.slot ? '#d1d5db' : '#9ca3af',
+                fontSize: 12, cursor: regenerating === meal.slot ? 'default' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, padding: 0,
+                animation: regenerating === meal.slot ? 'spin 0.8s linear infinite' : 'none',
+              }}
+            >{regenerating === meal.slot ? '⏳' : '↺'}</button>
+          </div>
           <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 1 }}>{modeLabel}</div>
           <div style={{
             ...s.mealName,
@@ -330,23 +347,8 @@ function MealCard({ meal, onRegenerate, regenerating }) {
           <div style={s.mealKcal}>{meal.total_calories}</div>
           <div style={s.mealKcalLbl}>kcal</div>
         </div>
-        {/* Przycisk przegeneruj */}
-        <button
-          onClick={e => { e.stopPropagation(); onRegenerate(meal.slot); }}
-          disabled={regenerating === meal.slot}
-          title="Wygeneruj inny posiłek"
-          style={{
-            marginLeft: 8, width: 30, height: 30, borderRadius: 8,
-            border: '1px solid #e5e7eb', background: 'white',
-            color: regenerating === meal.slot ? '#d1d5db' : '#6b7280',
-            fontSize: 15, cursor: regenerating === meal.slot ? 'default' : 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-            animation: regenerating === meal.slot ? 'spin 0.8s linear infinite' : 'none',
-          }}
-        >{regenerating === meal.slot ? '⏳' : '↺'}</button>
         <div style={{
-          marginLeft: 6, color: '#9ca3af', fontSize: 20, flexShrink: 0,
+          marginLeft: 10, color: '#9ca3af', fontSize: 20, flexShrink: 0,
           transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
           transition: 'transform 0.2s', lineHeight: 1,
         }}>▾</div>
@@ -385,117 +387,201 @@ function MealCard({ meal, onRegenerate, regenerating }) {
 }
 
 // ── Raport zakupów ────────────────────────────────────────────────────────────
+const SLOT_ORDER = ['breakfast', 'lunch', 'dinner', 'snack'];
+const SLOT_ICONS = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎' };
+
 function ShoppingReport({ plan, onBack, onClear }) {
-  // Zbierz wszystkie składniki z infem o sklepach
-  const byStore = {};
-  const noStore = [];
+  // Stan checkboxów — ładowany z localStorage
+  const STORAGE_KEY = 'nutricart_checked';
+  const [checked, setChecked] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch { return {}; }
+  });
 
-  for (const meal of plan.meals) {
+  function toggleCheck(key) {
+    setChecked(prev => {
+      const next = { ...prev, [key]: !prev[key] };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }
+
+  // Zbierz wszystkie składniki ze wszystkich posiłków (deduplikowane po nazwie)
+  const allItems = [];
+  const seen = new Set();
+  for (const meal of (plan.meals || [])) {
     for (const ing of (meal.ingredients || [])) {
-      const stores = ing.stores || [];
-      const label = `${formatIngredient(ing)} (${ing.calories} kcal)`;
-      const mealLabel = meal.type_label + (meal.name ? ` · ${meal.name}` : '');
-      const item = { label, mealLabel, ing };
-
-      if (stores.length === 0) {
-        noStore.push(item);
-      } else {
-        const key = stores.join(' / ');
-        if (!byStore[key]) byStore[key] = [];
-        byStore[key].push(item);
-      }
+      const key = ing.product_name + '|' + ing.quantity + '|' + ing.unit;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      allItems.push({ ing, meal });
     }
   }
 
   const date = plan.savedAt
-    ? new Date(plan.savedAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+    ? new Date(plan.savedAt).toLocaleDateString('pl-PL',
+        { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     : '';
+
+  const modeLabel = (meal) => meal.mode === 'products'
+    ? (meal.source === 'snack_meal' ? '🍱 gotowy zestaw' : '🛒 gotowe produkty')
+    : (meal.topping_added ? '🍳 przepis + dodatek' : '🍳 przepis');
 
   return (
     <div style={s.screen}>
       <button style={s.backBtn} onClick={onBack}>← Wróć do planu</button>
 
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 20, fontWeight: 800, color: '#1a1a1a', marginBottom: 4 }}>
-          🛍 Lista zakupów
+          📋 Raport planu
         </div>
         {date && <div style={{ fontSize: 12, color: '#9ca3af' }}>Zapisano: {date}</div>}
-        <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>
-          Plan {plan.total_calories} kcal (cel: {plan.target_calories} kcal)
+        <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>
+          {plan.total_calories} kcal · cel: {plan.target_calories} kcal
         </div>
       </div>
 
-      {/* Podsumowanie posiłków */}
-      <div style={{ background: '#f9fafb', borderRadius: 12, padding: 12, marginBottom: 20 }}>
-        <div style={{ fontWeight: 700, fontSize: 13, color: '#374151', marginBottom: 8 }}>Plan dnia</div>
-        {plan.meals.map((meal, i) => (
-          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, paddingBottom: 5, color: '#4b5563' }}>
-            <span>{meal.type_label} — {meal.name || 'Zestaw produktów'}</span>
-            <span style={{ color: '#16a34a', fontWeight: 600 }}>{meal.total_calories} kcal</span>
-          </div>
-        ))}
+      {/* ── CZĘŚĆ 1: Posiłki rozwinięte ── */}
+      <div style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>
+        🍽 Plan posiłków
       </div>
 
-      {/* Produkty per sklep */}
-      {Object.entries(byStore).map(([storeName, items]) => (
-        <div key={storeName} style={{ marginBottom: 16 }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            fontWeight: 700, fontSize: 13, color: '#374151', marginBottom: 8,
+      {SLOT_ORDER.map(slot => {
+        const meal = (plan.meals || []).find(m => m.slot === slot);
+        if (!meal) return null;
+        return (
+          <div key={slot} style={{
+            background: 'white', borderRadius: 14, border: '1px solid #e5e7eb',
+            marginBottom: 12, overflow: 'hidden',
           }}>
-            <span style={{
-              background: '#dcfce7', color: '#15803d', borderRadius: 6,
-              padding: '2px 8px', fontSize: 12,
-            }}>🏪 {storeName}</span>
+            {/* Nagłówek posiłku */}
+            <div style={{
+              background: '#f9fafb', padding: '10px 14px',
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 16 }}>{SLOT_ICONS[slot]}</span>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: '#1a1a1a' }}>{meal.type_label}</span>
+                </div>
+                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>{modeLabel(meal)}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginTop: 2 }}>
+                  {meal.name || 'Zestaw produktów'}
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#16a34a' }}>{meal.total_calories}</div>
+                <div style={{ fontSize: 10, color: '#9ca3af' }}>kcal</div>
+              </div>
+            </div>
+            {/* Składniki posiłku */}
+            <div style={{ padding: '8px 14px 10px' }}>
+              {(meal.ingredients || []).map((ing, j) => (
+                <div key={j} style={{
+                  display: 'flex', justifyContent: 'space-between',
+                  padding: '4px 0', borderBottom: j < meal.ingredients.length - 1 ? '1px solid #f3f4f6' : 'none',
+                  fontSize: 13, color: '#4b5563',
+                }}>
+                  <span>{formatIngredient(ing)}</span>
+                  <span style={{ color: '#9ca3af', flexShrink: 0, marginLeft: 8 }}>{ing.calories} kcal</span>
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: 10, paddingTop: 8, fontSize: 11, color: '#9ca3af' }}>
+                <span>B: {meal.total_protein}g</span>
+                <span>W: {meal.total_carbs}g</span>
+                <span>T: {meal.total_fat}g</span>
+              </div>
+            </div>
           </div>
-          {items.map((item, i) => (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'flex-start', gap: 8,
-              padding: '8px 12px', background: 'white', borderRadius: 10,
-              border: '1px solid #e5e7eb', marginBottom: 6, fontSize: 13,
-            }}>
-              <span style={{ marginTop: 2, fontSize: 16 }}>☐</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: '#1a1a1a' }}>{item.ing.product_name}</div>
-                <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
-                  {item.ing.quantity} {UNIT_LABELS[item.ing.unit] || item.ing.unit} · {item.ing.calories} kcal
-                </div>
-                <div style={{ fontSize: 10, color: '#d1d5db', marginTop: 1 }}>{item.mealLabel}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ))}
-
-      {noStore.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 13, color: '#374151', marginBottom: 8 }}>Pozostałe składniki</div>
-          {noStore.map((item, i) => (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'flex-start', gap: 8,
-              padding: '8px 12px', background: 'white', borderRadius: 10,
-              border: '1px solid #e5e7eb', marginBottom: 6, fontSize: 13,
-            }}>
-              <span style={{ marginTop: 2, fontSize: 16 }}>☐</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: '#1a1a1a' }}>{item.ing.product_name}</div>
-                <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
-                  {item.ing.quantity} {UNIT_LABELS[item.ing.unit] || item.ing.unit} · {item.ing.calories} kcal
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+        );
+      })}
 
       <div style={s.divider} />
-      <button onClick={onClear} style={{
-        width: '100%', padding: '12px', borderRadius: 12,
-        border: '1px solid #fecaca', background: '#fef2f2',
-        color: '#dc2626', fontSize: 13, cursor: 'pointer', fontWeight: 600,
-      }}>
-        🗑 Usuń zapisany plan
-      </button>
+
+      {/* ── CZĘŚĆ 2: Lista zakupów z checkboxami ── */}
+      <div style={{ fontSize: 15, fontWeight: 800, color: '#1a1a1a', marginBottom: 4 }}>
+        🛍 Lista zakupów
+      </div>
+      <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 14 }}>
+        Dotknij pozycji aby zaznaczyć jako kupione — stan jest zapamiętany
+      </div>
+
+      {allItems.map(({ ing, meal }, idx) => {
+        const key = ing.product_name + '|' + ing.quantity + '|' + ing.unit;
+        const done = !!checked[key];
+        const stores = ing.stores || [];
+        return (
+          <div
+            key={idx}
+            onClick={() => toggleCheck(key)}
+            style={{
+              display: 'flex', alignItems: 'flex-start', gap: 10,
+              padding: '10px 12px', borderRadius: 12,
+              border: `1px solid ${done ? '#bbf7d0' : '#e5e7eb'}`,
+              background: done ? '#f0fdf4' : 'white',
+              marginBottom: 8, cursor: 'pointer', transition: 'all 0.15s',
+              userSelect: 'none',
+            }}
+          >
+            {/* Checkbox */}
+            <div style={{
+              width: 22, height: 22, borderRadius: 6, flexShrink: 0, marginTop: 1,
+              border: `2px solid ${done ? '#16a34a' : '#d1d5db'}`,
+              background: done ? '#16a34a' : 'white',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13, color: 'white', fontWeight: 700,
+              transition: 'all 0.15s',
+            }}>
+              {done ? '✓' : ''}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontSize: 13, color: done ? '#6b7280' : '#1a1a1a',
+                fontWeight: 500,
+                textDecoration: done ? 'line-through' : 'none',
+              }}>
+                {ing.product_name}
+              </div>
+              <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
+                {ing.quantity} {UNIT_LABELS[ing.unit] || ing.unit} · {ing.calories} kcal
+                {stores.length > 0 && (
+                  <span style={{
+                    marginLeft: 6, background: '#dcfce7', color: '#15803d',
+                    borderRadius: 4, padding: '1px 5px', fontSize: 10,
+                  }}>
+                    {stores.join(', ')}
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 10, color: '#d1d5db', marginTop: 1 }}>
+                {meal.type_label}{meal.name ? ` · ${meal.name}` : ''}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      <div style={s.divider} />
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={() => {
+          setChecked({});
+          localStorage.removeItem(STORAGE_KEY);
+        }} style={{
+          flex: 1, padding: '11px', borderRadius: 12,
+          border: '1px solid #e5e7eb', background: '#f9fafb',
+          color: '#6b7280', fontSize: 13, cursor: 'pointer', fontWeight: 600,
+        }}>
+          ☐ Odznacz wszystko
+        </button>
+        <button onClick={onClear} style={{
+          flex: 1, padding: '11px', borderRadius: 12,
+          border: '1px solid #fecaca', background: '#fef2f2',
+          color: '#dc2626', fontSize: 13, cursor: 'pointer', fontWeight: 600,
+        }}>
+          🗑 Usuń plan
+        </button>
+      </div>
     </div>
   );
 }
@@ -520,17 +606,30 @@ function PlanScreen({ plan, setPlan, onBack }) {
       const otherCal = plan.meals
         .filter(m => m.slot !== slot)
         .reduce((s, m) => s + (m.total_calories || 0), 0);
-      const newTarget = Math.max(100, plan.target_calories - otherCal);
+      // Ile kalorii ma dostać ten slot: cel minus pozostałe
+      const slotTarget = Math.max(100, plan.target_calories - otherCal);
 
       const meal = plan.meals.find(m => m.slot === slot);
-      const modeForSlot = { [slot]: meal?.mode || 'products' };
+      const slotMode = meal?.mode || 'products';
 
-      const newPlan = await generatePlan(plan.store_ids, plan.target_calories, modeForSlot);
+      // Proporcje wg slotu — odwróć formułę żeby API wyliczyło właściwy target
+      const slotRatio = { breakfast: 0.25, lunch: 0.35, dinner: 0.30, snack: 0.10 };
+      const ratio = slotRatio[slot] || 0.25;
+      // target_calories dla całego dnia tak żeby slot dostał slotTarget
+      const syntheticTotal = Math.round(slotTarget / ratio);
 
-      // Weź tylko slot który chcemy podmienić
-      const newMeal = newPlan.meals.find(m => m.slot === slot);
+      const res = await fetch(`${BASE}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          store_ids: plan.store_ids,
+          target_calories: syntheticTotal,
+          modes: { breakfast: slotMode, lunch: slotMode, dinner: slotMode, snack: slotMode },
+        })
+      });
+      const newPlan = await res.json();
+      const newMeal = newPlan.meals?.find(m => m.slot === slot);
       if (newMeal) {
-        // Skaluj kalorie nowego posiłku do nowego targetu jeśli potrzeba
         const updatedMeals = plan.meals.map(m => m.slot === slot ? newMeal : m);
         setPlan(prev => ({ ...prev, meals: updatedMeals }));
         setSaved(false);
