@@ -41,6 +41,20 @@ router.post('/', async (req, res) => {
 
     const placeholders = store_ids.map(() => '?').join(',');
 
+    // Pobierz mapę product_id -> nazwy sklepów (dla raportu)
+    const [productStoreRows] = await db.query(
+      `SELECT ps.product_id, s.name as store_name
+       FROM product_stores ps
+       JOIN stores s ON ps.store_id = s.id
+       WHERE ps.store_id IN (${placeholders})`,
+      store_ids
+    );
+    const productStores = {};
+    for (const row of productStoreRows) {
+      if (!productStores[row.product_id]) productStores[row.product_id] = [];
+      productStores[row.product_id].push(row.store_name);
+    }
+
     // Aktywne produkty w wybranych sklepach — wykluczamy konkretne instancje generycznych
     // (generic_product_id IS NOT NULL = produkt ma swój generyczny odpowiednik → pomijamy)
     const [allActiveProducts] = await db.query(
@@ -94,10 +108,12 @@ router.post('/', async (req, res) => {
         total_fat:      round1(totalFat),
         is_ready_to_eat_meal: isReadyToEatMeal,
         ingredients: mealIngr.map(i => ({
+          product_id: i.product_id,
           product_name: i.product_name,
           quantity: i.quantity,
           unit: i.unit,
-          calories: Math.round(calcCalories(i))
+          calories: Math.round(calcCalories(i)),
+          stores: (productStores[i.product_id] || []),
         }))
       };
     }).filter(Boolean);
@@ -141,6 +157,7 @@ router.post('/', async (req, res) => {
       total_carbs: totalCarbs,
       total_fat: totalFat,
       target_calories,
+      store_ids,
       meals: results
     });
 
@@ -166,7 +183,7 @@ function buildProductsSlot(readyProducts, mealsWithCalories, targetCal, slot) {
       const picked = pickClosest(snackMeals, targetCal);
       return { ...picked, source: 'snack_meal' };
     }
-    return buildProductMeal(readyProducts, targetCal, slot);
+    return buildProductMeal(readyProducts, targetCal, slot, productStores);
   }
 
   // Pozostałe sloty (breakfast/lunch/dinner): 25% szans na snack-meal jako propozycję
@@ -176,7 +193,7 @@ function buildProductsSlot(readyProducts, mealsWithCalories, targetCal, slot) {
     return { ...picked, source: 'snack_meal' };
   }
 
-  return buildProductMeal(readyProducts, targetCal, slot);
+  return buildProductMeal(readyProducts, targetCal, slot, productStores);
 }
 
 // ── Tryb MEAL ─────────────────────────────────────────────────────────────────
@@ -248,7 +265,7 @@ const SLOT_CATEGORIES = {
   snack:     ['owoce', 'orzechy', 'nabiał', 'przekąski'],
 };
 
-function buildProductMeal(allProducts, targetCal, slot) {
+function buildProductMeal(allProducts, targetCal, slot, productStoresRef = {}) {
   const preferredCats = SLOT_CATEGORIES[slot] || [];
   const TOLERANCE = 0.20;
   const MIN = targetCal * (1 - TOLERANCE);
@@ -294,10 +311,12 @@ function buildProductMeal(allProducts, targetCal, slot) {
   const ingredients = best.selected.map(p => {
     const servingG = getServingG(p);
     return {
+      product_id: p.id,
       product_name: p.name,
       quantity: p.serving_unit === 'piece' ? 1 : servingG,
       unit: p.serving_unit === 'piece' ? 'piece' : 'g',
-      calories: Math.round(caloriesForProduct(p))
+      calories: Math.round(caloriesForProduct(p)),
+      stores: (productStoresRef[p.id] || []),
     };
   });
 

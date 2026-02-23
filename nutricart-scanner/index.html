@@ -2034,7 +2034,7 @@ function NutritionPanel({ meal, allProducts }) {
 }
 
 // ── MealCard — karta przepisu na liście ────────────────────────────────────
-function MealCard({ meal, isExpanded, onToggleExpand, onToggleStatus, onDelete, onSelect, isSelected }) {
+function MealCard({ meal, isExpanded, onToggleExpand, onToggleStatus, onDelete, onSelect, isSelected, onEdit }) {
   const typeColor = {
     breakfast:'rgba(251,191,36,0.15)', lunch:'rgba(34,211,238,0.1)',
     dinner:'rgba(167,139,250,0.12)',   snack:'rgba(74,222,128,0.1)'
@@ -2083,6 +2083,12 @@ function MealCard({ meal, isExpanded, onToggleExpand, onToggleStatus, onDelete, 
             color: isSelected ? 'var(--accent)' : 'var(--muted)',
             fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',
           }}>📊</button>
+          {/* Edytuj */}
+          <button onClick={()=>onEdit(meal)} title="Edytuj przepis" style={{
+            width:30,height:30,borderRadius:8,border:'1px solid var(--border)',
+            background:'transparent',color:'var(--muted)',
+            fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',
+          }}>✏️</button>
           {/* Toggle active/inactive */}
           <button onClick={()=>onToggleStatus(meal)} title={isInactive ? 'Aktywuj' : 'Dezaktywuj'} style={{
             width:30,height:30,borderRadius:8,border:'1px solid var(--border)',
@@ -2132,12 +2138,21 @@ function MealCard({ meal, isExpanded, onToggleExpand, onToggleStatus, onDelete, 
 }
 
 // ── AddMealPanel — formularz dodawania (pełny panel) ───────────────────────
-function AddMealPanel({ allProducts, loadingProducts, onSaved, onCancel }) {
-  const [mealName, setMealName] = useState('');
-  const [mealType, setMealType] = useState('lunch');
-  const [ingredients, setIngredients] = useState([
-    { id: Date.now(), product_id: '', qty: 100, unit: 'g' }
-  ]);
+// editMeal: null = nowy przepis, obiekt = edycja istniejącego
+function MealFormPanel({ allProducts, loadingProducts, onSaved, onCancel, editMeal }) {
+  const isEdit = !!editMeal;
+
+  const [mealName, setMealName] = useState(editMeal?.name || '');
+  const [mealType, setMealType] = useState(editMeal?.meal_type || 'lunch');
+  const [ingredients, setIngredients] = useState(() => {
+    if (!editMeal?.ingredients?.length) return [{ id: Date.now(), product_id: '', qty: 100, unit: 'g' }];
+    return editMeal.ingredients.map((ing, i) => ({
+      id: i + 1,
+      product_id: String(ing.product_id ?? ing.id ?? ''),
+      qty: ing.quantity ?? ing.qty ?? 100,
+      unit: ing.unit || 'g',
+    }));
+  });
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
 
@@ -2157,16 +2172,6 @@ function AddMealPanel({ allProducts, loadingProducts, onSaved, onCancel }) {
     return t;
   }, [ingredients, allProducts]);
 
-  // Buduje obiekt "meal" zgodny z NutritionPanel do podglądu na żywo
-  const previewMeal = React.useMemo(() => ({
-    name: mealName || '(nowy przepis)',
-    meal_type: mealType,
-    ingredients: ingredients.map(ing => ({
-      ...ing,
-      quantity: ing.qty,
-    }))
-  }), [ingredients, mealName, mealType]);
-
   async function saveMeal() {
     if (!mealName.trim()) return showToast('Podaj nazwę posiłku');
     const valid = ingredients.filter(i=>i.product_id && Number(i.qty)>0);
@@ -2177,11 +2182,12 @@ function AddMealPanel({ allProducts, loadingProducts, onSaved, onCancel }) {
         name: mealName.trim(), meal_type: mealType,
         ingredients: valid.map(i=>({ product_id:Number(i.product_id), quantity:Number(i.qty), unit:i.unit }))
       };
-      const res = await fetch(`${API}/meals`, {
-        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+      const url = isEdit ? `${API}/meals/${editMeal.id}` : `${API}/meals`;
+      const method = isEdit ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
       });
       if (!res.ok) throw new Error('Błąd zapisu');
-      showToast('✓ Zapisano!');
       onSaved();
     } catch(e) { showToast('Błąd: '+e.message); }
     finally { setSaving(false); }
@@ -2195,7 +2201,9 @@ function AddMealPanel({ allProducts, loadingProducts, onSaved, onCancel }) {
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',
         padding:'16px 20px 12px',borderBottom:'1px solid var(--border)',flexShrink:0}}>
         <div>
-          <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:16}}>Nowy przepis</div>
+          <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:16}}>
+            {isEdit ? '✏️ Edytuj przepis' : 'Nowy przepis'}
+          </div>
           {liveNutrition.calories_per_100g > 0 && (
             <div style={{fontFamily:'DM Mono,monospace',fontSize:11,color:'var(--accent)',marginTop:2}}>
               {Math.round(liveNutrition.calories_per_100g)} kcal · B:{fmtVal(liveNutrition.protein_per_100g)} W:{fmtVal(liveNutrition.carbs_per_100g)} T:{fmtVal(liveNutrition.fat_per_100g)}
@@ -2290,7 +2298,7 @@ function AddMealPanel({ allProducts, loadingProducts, onSaved, onCancel }) {
       {/* Przycisk zapisu */}
       <div style={{padding:'12px 20px',borderTop:'1px solid var(--border)',flexShrink:0}}>
         <button className="save-meal-btn" onClick={saveMeal} disabled={saving||!mealName.trim()}>
-          {saving ? 'Zapisuję...' : '💾 Zapisz przepis'}
+          {saving ? 'Zapisuję...' : (isEdit ? '💾 Zapisz zmiany' : '💾 Zapisz przepis')}
         </button>
       </div>
     </div>
@@ -2306,6 +2314,7 @@ function MealPlannerScreen({ stores, onBack, onHome }) {
   const [expandedId, setExpandedId] = useState(null);
   const [selectedMeal, setSelectedMeal] = useState(null);   // podgląd odżywczy
   const [showAddPanel, setShowAddPanel] = useState(false);   // formularz dodawania
+  const [editingMeal, setEditingMeal] = useState(null);      // przepis do edycji
   const [filterType, setFilterType] = useState('all');       // filtr pora dnia
   const [filterStatus, setFilterStatus] = useState('all');   // active/inactive/all
   const [toast, setToast] = useState('');
@@ -2363,13 +2372,21 @@ function MealPlannerScreen({ stores, onBack, onHome }) {
 
   function handleAddClick() {
     setShowAddPanel(true);
+    setEditingMeal(null);
+    setSelectedMeal(null);
+  }
+
+  function handleEdit(meal) {
+    setEditingMeal(meal);
+    setShowAddPanel(true);
     setSelectedMeal(null);
   }
 
   function handleAddSaved() {
     loadMeals();
     setShowAddPanel(false);
-    showToast('✓ Przepis dodany!');
+    setEditingMeal(null);
+    showToast(editingMeal ? '✓ Zmiany zapisane!' : '✓ Przepis dodany!');
   }
 
   // Grupuj i filtruj
@@ -2514,6 +2531,7 @@ function MealPlannerScreen({ stores, onBack, onHome }) {
                         onToggleStatus={handleToggleStatus}
                         onDelete={handleDelete}
                         onSelect={handleSelectMeal}
+                        onEdit={handleEdit}
                       />
                     ))}
                   </div>
@@ -2526,11 +2544,12 @@ function MealPlannerScreen({ stores, onBack, onHome }) {
         {/* ── PRAWA: podgląd odżywczy lub formularz dodawania ── */}
         <div className="planner-right" style={{padding:0,display:'flex',flexDirection:'column'}}>
           {showAddPanel ? (
-            <AddMealPanel
+            <MealFormPanel
               allProducts={allProducts}
               loadingProducts={loadingProducts}
               onSaved={handleAddSaved}
-              onCancel={()=>setShowAddPanel(false)}
+              onCancel={()=>{ setShowAddPanel(false); setEditingMeal(null); }}
+              editMeal={editingMeal}
             />
           ) : (
             <div style={{flex:1,overflowY:'auto',padding:'20px'}}>
