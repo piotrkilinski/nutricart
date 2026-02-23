@@ -120,7 +120,7 @@ router.post('/', async (req, res) => {
       const byType = mealsWithCalories.filter(m => m.meal_type === slot);
 
       if (mode === 'products') {
-        const result = buildProductsSlot(readyProducts, byType, targetCal, slot);
+        const result = buildProductsSlot(readyProducts, mealsWithCalories, targetCal, slot);
         results.push({ ...result, slot, type_label: slotLabels[slot], mode: 'products' });
 
       } else {
@@ -151,31 +151,31 @@ router.post('/', async (req, res) => {
 });
 
 // ── Tryb PRODUCTS ─────────────────────────────────────────────────────────────
-// Dla snacka: snack-meals (tylko gotowe produkty) mają wyższą wagę niż pojedyncze.
-// Dla pozostałych slotów: tylko pojedyncze gotowe produkty.
+// Dla każdego slotu: snack-meals (przepisy typu 'snack' złożone z gotowych produktów)
+// mogą być zaproponowane jako szybka przekąska. Dla slotu 'snack' mają wyższy priorytet.
 
-function buildProductsSlot(readyProducts, mealsForSlot, targetCal, slot) {
+function buildProductsSlot(readyProducts, mealsWithCalories, targetCal, slot) {
+  // Przepisy snack złożone wyłącznie z gotowych produktów (is_ready_to_eat_meal)
+  const snackMeals = mealsWithCalories.filter(
+    m => m.meal_type === 'snack' && m.is_ready_to_eat_meal
+  );
+
   if (slot === 'snack') {
-    // Snack-meals — gotowe zestawy z tabeli meals złożone wyłącznie z ready_to_eat produktów
-    const snackMeals = mealsForSlot.filter(m => m.is_ready_to_eat_meal);
-
-    if (snackMeals.length > 0) {
-      // 70% szans na snack-meal, 30% na pojedyncze produkty
-      const useSnackMeal = Math.random() < 0.70;
-      if (useSnackMeal) {
-        const picked = pickClosest(snackMeals, targetCal);
-        return {
-          ...picked,
-          source: 'snack_meal',
-          name: picked.name,
-        };
-      }
+    // Slot snack: 70% szans na snack-meal, 30% na pojedyncze produkty
+    if (snackMeals.length > 0 && Math.random() < 0.70) {
+      const picked = pickClosest(snackMeals, targetCal);
+      return { ...picked, source: 'snack_meal' };
     }
-    // Fallback lub 30% — zestaw pojedynczych produktów
     return buildProductMeal(readyProducts, targetCal, slot);
   }
 
-  // Pozostałe sloty — tylko gotowe produkty
+  // Pozostałe sloty (breakfast/lunch/dinner): 25% szans na snack-meal jako propozycję
+  // — daje urozmaicenie bez dominowania nad głównymi posiłkami
+  if (snackMeals.length > 0 && Math.random() < 0.25) {
+    const picked = pickClosest(snackMeals, targetCal);
+    return { ...picked, source: 'snack_meal' };
+  }
+
   return buildProductMeal(readyProducts, targetCal, slot);
 }
 
