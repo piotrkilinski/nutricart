@@ -2324,11 +2324,10 @@ function GenericProductsScreen({ stores, onBack, onHome }) {
       <Header icon='🧬' sub={editItem?'Edytuj generyczny':'Nowy generyczny'} onBack={()=>setShowForm(false)} onHome={onHome}/>
       <div className="screen" style={{maxWidth:560,margin:'0 auto'}}>
 
-        <div className="planner-section-label">Nazwa i kategoria</div>
+        <div className="planner-section-label">Nazwa</div>
         <input className="planner-input" style={{marginBottom:10}} placeholder="np. Jabłko, Ryż biały, Mąka pszenna..."
           value={form.name} onChange={e=>setF('name',e.target.value)}/>
-        <select className="ingredient-unit" style={{width:'100%',padding:'11px 12px',borderRadius:12,marginBottom:20,fontSize:14}}
-          value={form.category} onChange={e=>setF('category',e.target.value)}>
+        <select style={{display:'none'}} value={form.category} onChange={e=>setF('category',e.target.value)}>
           {CATEGORIES.map(c=><option key={c} value={c}>{c}</option>)}
         </select>
 
