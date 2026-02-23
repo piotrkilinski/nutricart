@@ -301,7 +301,29 @@ function MealCard({ meal, onRegenerate, regenerating }) {
     : (meal.topping_added ? '🍳 przepis + dodatek' : '🍳 przepis');
 
   return (
-    <div style={s.mealCard}>
+    <div style={{ ...s.mealCard, position: 'relative' }}>
+      {/* Przycisk ↺ — prawy górny róg kafelka */}
+      <button
+        onClick={e => { e.stopPropagation(); onRegenerate(meal.slot); }}
+        disabled={regenerating === meal.slot}
+        title="Wygeneruj inny posiłek"
+        style={{
+          position: 'absolute', top: 10, right: 10, zIndex: 2,
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          padding: '4px 10px', borderRadius: 20,
+          border: '1.5px solid #16a34a',
+          background: regenerating === meal.slot ? '#f0fdf4' : 'white',
+          color: regenerating === meal.slot ? '#9ca3af' : '#16a34a',
+          fontSize: 12, fontWeight: 700,
+          cursor: regenerating === meal.slot ? 'default' : 'pointer',
+          whiteSpace: 'nowrap',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+          animation: regenerating === meal.slot ? 'spin 0.8s linear infinite' : 'none',
+        }}
+      >
+        {regenerating === meal.slot ? '⏳' : '↺'} inne
+      </button>
+
       <div
         onClick={() => setOpen(o => !o)}
         style={{
@@ -309,6 +331,7 @@ function MealCard({ meal, onRegenerate, regenerating }) {
           cursor: 'pointer',
           borderBottom: open ? '1px solid #e5e7eb' : 'none',
           userSelect: 'none',
+          paddingRight: 90, // miejsce na przycisk
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -326,37 +349,15 @@ function MealCard({ meal, onRegenerate, regenerating }) {
             </div>
           )}
         </div>
-        {/* Prawa strona: kcal + przycisk pill + chevron */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 10 }}>
-          <div style={{ textAlign: 'right' }}>
-            <div style={s.mealKcal}>{meal.total_calories}</div>
-            <div style={s.mealKcalLbl}>kcal</div>
-          </div>
-          {/* Przycisk ↺ — wariant A (pill) */}
-          <button
-            onClick={e => { e.stopPropagation(); onRegenerate(meal.slot); }}
-            disabled={regenerating === meal.slot}
-            title="Wygeneruj inny posiłek"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '4px 10px', borderRadius: 20,
-              border: '1.5px solid #16a34a',
-              background: regenerating === meal.slot ? '#f0fdf4' : 'white',
-              color: regenerating === meal.slot ? '#9ca3af' : '#16a34a',
-              fontSize: 12, fontWeight: 700,
-              cursor: regenerating === meal.slot ? 'default' : 'pointer',
-              flexShrink: 0, whiteSpace: 'nowrap',
-              animation: regenerating === meal.slot ? 'spin 0.8s linear infinite' : 'none',
-            }}
-          >
-            {regenerating === meal.slot ? '⏳' : '↺'} inne
-          </button>
-          <div style={{
-            color: '#9ca3af', fontSize: 20,
-            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.2s', lineHeight: 1,
-          }}>▾</div>
+        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 10 }}>
+          <div style={s.mealKcal}>{meal.total_calories}</div>
+          <div style={s.mealKcalLbl}>kcal</div>
         </div>
+        <div style={{
+          marginLeft: 10, color: '#9ca3af', fontSize: 20, flexShrink: 0,
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 0.2s', lineHeight: 1,
+        }}>▾</div>
       </div>
 
       {open && (

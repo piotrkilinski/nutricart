@@ -71,7 +71,7 @@ router.post('/', async (req, res) => {
     );
 
     // Tylko gotowe do jedzenia — do trybu 'products' i dopełniania
-    const readyProducts = allActiveProducts.filter(p => p.is_ready_to_eat === 1);
+    const readyProducts = allActiveProducts.filter(p => p.is_ready_to_eat == 1); // == żeby obsłużyć '1' (string) i 1 (number) z MySQL
     const allProductIds = new Set(allActiveProducts.map(p => p.id));
 
     // Pobierz posiłki ze składnikami
@@ -99,7 +99,7 @@ router.post('/', async (req, res) => {
       const totalFat      = mealIngr.reduce((s, i) => s + calcNutrient(i, 'fat_per_100g'), 0);
 
       // Czy to "snack meal" — zestaw złożony wyłącznie z gotowych produktów
-      const isReadyToEatMeal = mealIngr.every(i => i.is_ready_to_eat === 1);
+      const isReadyToEatMeal = mealIngr.every(i => i.is_ready_to_eat == 1);
 
       return {
         ...meal,
