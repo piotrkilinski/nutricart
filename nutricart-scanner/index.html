@@ -1616,8 +1616,17 @@ function ProductsScreen({ stores, onBack, onHome }) {
         <Toast msg={toast}/>
         <Header icon='✏️' sub='Edytuj produkt' onBack={()=>setEditProduct(null)} onHome={onHome}/>
         <div className="screen">
-          <div style={{fontFamily:'Syne',fontSize:18,fontWeight:700,marginBottom:4}}>{editProduct.name}</div>
-          {editProduct.brand&&<div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>{editProduct.brand}</div>}
+          <div style={{display:'flex',gap:16,alignItems:'flex-start',marginBottom:16}}>
+            {editProduct.image_url
+              ? <img src={editProduct.image_url} alt={editProduct.name}
+                  style={{width:72,height:72,borderRadius:14,objectFit:'contain',background:'var(--surface2)',flexShrink:0}}/>
+              : null}
+            <div>
+              <div style={{fontFamily:'Syne',fontSize:18,fontWeight:700,marginBottom:4}}>{editProduct.name}</div>
+              {editProduct.brand&&<div style={{fontSize:12,color:'var(--muted)'}}>{editProduct.brand}</div>}
+              {editProduct.barcode&&<div style={{fontSize:11,color:'var(--muted)',fontFamily:'DM Mono,monospace',marginTop:2}}>{editProduct.barcode}</div>}
+            </div>
+          </div>
 
           <div className="section-label">Sklepy</div>
           <div className="store-grid" style={{marginBottom:24}}>
