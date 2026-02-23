@@ -320,12 +320,15 @@ function MealCard({ meal, onRegenerate, regenerating }) {
               disabled={regenerating === meal.slot}
               title="Wygeneruj inny posiłek"
               style={{
-                width: 22, height: 22, borderRadius: 6,
-                border: '1px solid #e5e7eb', background: 'white',
-                color: regenerating === meal.slot ? '#d1d5db' : '#9ca3af',
-                fontSize: 12, cursor: regenerating === meal.slot ? 'default' : 'pointer',
+                width: 28, height: 28, borderRadius: 8,
+                border: '1.5px solid #16a34a',
+                background: regenerating === meal.slot ? '#f0fdf4' : 'white',
+                color: regenerating === meal.slot ? '#d1d5db' : '#16a34a',
+                fontSize: 14, fontWeight: 700,
+                cursor: regenerating === meal.slot ? 'default' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0, padding: 0,
+                boxShadow: '0 1px 3px rgba(22,163,74,0.15)',
                 animation: regenerating === meal.slot ? 'spin 0.8s linear infinite' : 'none',
               }}
             >{regenerating === meal.slot ? '⏳' : '↺'}</button>
@@ -631,8 +634,19 @@ function PlanScreen({ plan, setPlan, onBack }) {
       const newMeal = newPlan.meals?.find(m => m.slot === slot);
       if (newMeal) {
         const updatedMeals = plan.meals.map(m => m.slot === slot ? newMeal : m);
-        setPlan(prev => ({ ...prev, meals: updatedMeals }));
-        setSaved(false);
+        setPlan(prev => {
+          const updated = { ...prev, meals: updatedMeals };
+          // Jeśli plan był zapisany — zaktualizuj też zapis w localStorage
+          if (localStorage.getItem('nutricart_plan')) {
+            const existing = JSON.parse(localStorage.getItem('nutricart_plan'));
+            localStorage.setItem('nutricart_plan', JSON.stringify({
+              ...existing,
+              meals: updatedMeals,
+              total_calories: updatedMeals.reduce((s, m) => s + (m.total_calories || 0), 0),
+            }));
+          }
+          return updated;
+        });
       }
     } catch (e) {
       console.error(e);

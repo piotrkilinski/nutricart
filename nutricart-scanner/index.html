@@ -1543,6 +1543,9 @@ function ProductsScreen({ stores, onBack, onHome }) {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterStore, setFilterStore] = useState('all');
+  const [filterReady, setFilterReady] = useState('all');   // 'all'|'ready'|'not_ready'
+  const [filterNoStore, setFilterNoStore] = useState(false); // bez przypisanego sklepu
+  const [lightboxImg, setLightboxImg] = useState(null);    // URL zdjęcia w lightboxie
   const [editProduct, setEditProduct] = useState(null);
   const [sortBy, setSortBy] = useState('date_desc');
   const [saving, setSaving] = useState(false);
@@ -1599,6 +1602,12 @@ function ProductsScreen({ stores, onBack, onHome }) {
       if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && !(p.brand||'').toLowerCase().includes(search.toLowerCase())) return false;
       if (filterStatus !== 'all' && p.status !== filterStatus) return false;
       if (filterStore !== 'all' && !(p.store_ids||[]).includes(Number(filterStore))) return false;
+      if (filterReady === 'ready' && p.is_ready_to_eat !== 1) return false;
+      if (filterReady === 'not_ready' && p.is_ready_to_eat === 1) return false;
+      if (filterNoStore) {
+        const sids = Array.isArray(p.store_ids) ? p.store_ids : (p.store_ids ? p.store_ids.toString().split(',').map(Number) : []);
+        if (sids.length > 0) return false;
+      }
       return true;
     })
     .sort((a, b) => {
@@ -1692,6 +1701,29 @@ function ProductsScreen({ stores, onBack, onHome }) {
   return (
     <div style={{minHeight:'100vh',background:'var(--bg)'}}>
       <Toast msg={toast}/>
+
+      {/* Lightbox — powiększone zdjęcie */}
+      {lightboxImg && (
+        <div onClick={()=>setLightboxImg(null)} style={{
+          position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:300,
+          display:'flex',alignItems:'center',justifyContent:'center',padding:20,
+          cursor:'zoom-out',
+        }}>
+          <div onClick={e=>e.stopPropagation()} style={{position:'relative',maxWidth:360,width:'100%'}}>
+            <img src={lightboxImg} alt="" style={{
+              width:'100%',maxHeight:'70vh',objectFit:'contain',
+              borderRadius:16,background:'white',padding:12,
+            }}/>
+            <button onClick={()=>setLightboxImg(null)} style={{
+              position:'absolute',top:-12,right:-12,width:32,height:32,
+              borderRadius:'50%',background:'rgba(0,0,0,0.7)',border:'none',
+              color:'white',fontSize:18,cursor:'pointer',
+              display:'flex',alignItems:'center',justifyContent:'center',
+            }}>×</button>
+          </div>
+        </div>
+      )}
+
       <Header icon='🗄' sub={`Produkty (${filtered.length})`} onBack={onBack} onHome={onHome}/>
       <div className="screen">
         <input className="search-input" placeholder="🔍 Szukaj po nazwie lub marce..." value={search} onChange={e=>setSearch(e.target.value)}/>
@@ -1716,9 +1748,21 @@ function ProductsScreen({ stores, onBack, onHome }) {
 
         <div className="filter-bar">
           <button className={`filter-chip ${filterStore==='all'?'active':''}`} onClick={()=>setFilterStore('all')}>Wszystkie sklepy</button>
-          {stores.map(s=>(
+          {stores.filter(s=>s.status!=='deleted').map(s=>(
             <button key={s.id} className={`filter-chip ${filterStore===String(s.id)?'active':''}`}
               onClick={()=>setFilterStore(String(s.id))}>{s.name}</button>
+          ))}
+          <button className={`filter-chip ${filterNoStore?'active':''}`}
+            onClick={()=>setFilterNoStore(v=>!v)}
+            style={filterNoStore?{background:'rgba(248,113,113,0.15)',color:'var(--red)',borderColor:'rgba(248,113,113,0.4)'}:{}}>
+            ⚠ Bez sklepu
+          </button>
+        </div>
+
+        <div className="filter-bar">
+          {[['all','Wszystkie'],['ready','✅ Gotowe'],['not_ready','🍳 Do gotowania']].map(([v,l])=>(
+            <button key={v} className={`filter-chip ${filterReady===v?'active':''}`}
+              onClick={()=>setFilterReady(v)}>{l}</button>
           ))}
         </div>
 
@@ -1731,7 +1775,10 @@ function ProductsScreen({ stores, onBack, onHome }) {
                 setEditProduct({...p, store_ids: sids});
                 setGenericProductId(p.generic_product_id||null);
               }}>
-              {p.image_url ? <img className="product-row-img" src={p.image_url} alt={p.name} style={{width:44,height:44,borderRadius:10,objectFit:'contain',background:'var(--surface2)'}}/>
+              {p.image_url
+                ? <img className="product-row-img" src={p.image_url} alt={p.name}
+                    style={{width:44,height:44,borderRadius:10,objectFit:'contain',background:'var(--surface2)',cursor:'zoom-in'}}
+                    onClick={e=>{ e.stopPropagation(); setLightboxImg(p.image_url); }}/>
                 : <div className="product-row-img">🥫</div>}
               <div className="product-row-info">
                 <div className="product-row-name">{p.name}</div>
