@@ -301,29 +301,7 @@ function MealCard({ meal, onRegenerate, regenerating }) {
     : (meal.topping_added ? '🍳 przepis + dodatek' : '🍳 przepis');
 
   return (
-    <div style={{ ...s.mealCard, position: 'relative' }}>
-      {/* Przycisk ↺ — prawy górny róg kafelka */}
-      <button
-        onClick={e => { e.stopPropagation(); onRegenerate(meal.slot); }}
-        disabled={regenerating === meal.slot}
-        title="Wygeneruj inny posiłek"
-        style={{
-          position: 'absolute', top: 10, right: 10, zIndex: 2,
-          display: 'inline-flex', alignItems: 'center', gap: 4,
-          padding: '4px 10px', borderRadius: 20,
-          border: '1.5px solid #16a34a',
-          background: regenerating === meal.slot ? '#f0fdf4' : 'white',
-          color: regenerating === meal.slot ? '#9ca3af' : '#16a34a',
-          fontSize: 12, fontWeight: 700,
-          cursor: regenerating === meal.slot ? 'default' : 'pointer',
-          whiteSpace: 'nowrap',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-          animation: regenerating === meal.slot ? 'spin 0.8s linear infinite' : 'none',
-        }}
-      >
-        {regenerating === meal.slot ? '⏳' : '↺'} inne
-      </button>
-
+    <div style={s.mealCard}>
       <div
         onClick={() => setOpen(o => !o)}
         style={{
@@ -331,9 +309,10 @@ function MealCard({ meal, onRegenerate, regenerating }) {
           cursor: 'pointer',
           borderBottom: open ? '1px solid #e5e7eb' : 'none',
           userSelect: 'none',
-          paddingRight: 90, // miejsce na przycisk
+          alignItems: 'flex-start',
         }}
       >
+        {/* Lewa: info o posiłku */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={s.mealType}>{meal.type_label}</div>
           <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 1 }}>{modeLabel}</div>
@@ -349,15 +328,18 @@ function MealCard({ meal, onRegenerate, regenerating }) {
             </div>
           )}
         </div>
-        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 10 }}>
-          <div style={s.mealKcal}>{meal.total_calories}</div>
-          <div style={s.mealKcalLbl}>kcal</div>
+        {/* Prawa: kcal + chevron */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, marginLeft: 10 }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={s.mealKcal}>{meal.total_calories}</div>
+            <div style={s.mealKcalLbl}>kcal</div>
+          </div>
+          <div style={{
+            color: '#9ca3af', fontSize: 20,
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s', lineHeight: 1,
+          }}>▾</div>
         </div>
-        <div style={{
-          marginLeft: 10, color: '#9ca3af', fontSize: 20, flexShrink: 0,
-          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-          transition: 'transform 0.2s', lineHeight: 1,
-        }}>▾</div>
       </div>
 
       {open && (
@@ -380,10 +362,30 @@ function MealCard({ meal, onRegenerate, regenerating }) {
                 </div>
               </div>
             ))}
-            <div style={{ display: 'flex', gap: 12, paddingTop: 8, fontSize: 12, color: '#9ca3af' }}>
-              <span>B: {meal.total_protein}g</span>
-              <span>W: {meal.total_carbs}g</span>
-              <span>T: {meal.total_fat}g</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 }}>
+              <div style={{ display: 'flex', gap: 12, fontSize: 12, color: '#9ca3af' }}>
+                <span>B: {meal.total_protein}g</span>
+                <span>W: {meal.total_carbs}g</span>
+                <span>T: {meal.total_fat}g</span>
+              </div>
+              <button
+                onClick={e => { e.stopPropagation(); onRegenerate(meal.slot); }}
+                disabled={regenerating === meal.slot}
+                title="Wygeneruj inny posiłek"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  padding: '4px 11px', borderRadius: 20,
+                  border: '1.5px solid #16a34a',
+                  background: regenerating === meal.slot ? '#f0fdf4' : 'white',
+                  color: regenerating === meal.slot ? '#9ca3af' : '#16a34a',
+                  fontSize: 12, fontWeight: 700,
+                  cursor: regenerating === meal.slot ? 'default' : 'pointer',
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                  animation: regenerating === meal.slot ? 'spin 0.8s linear infinite' : 'none',
+                }}
+              >
+                {regenerating === meal.slot ? '⏳' : '↺'} inne
+              </button>
             </div>
           </div>
         )
