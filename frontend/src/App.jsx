@@ -312,27 +312,7 @@ function MealCard({ meal, onRegenerate, regenerating }) {
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={s.mealType}>{meal.type_label}</div>
-            {/* Przycisk przegeneruj — przy nazwie pory dnia */}
-            <button
-              onClick={e => { e.stopPropagation(); onRegenerate(meal.slot); }}
-              disabled={regenerating === meal.slot}
-              title="Wygeneruj inny posiłek"
-              style={{
-                width: 28, height: 28, borderRadius: 8,
-                border: '1.5px solid #16a34a',
-                background: regenerating === meal.slot ? '#f0fdf4' : 'white',
-                color: regenerating === meal.slot ? '#d1d5db' : '#16a34a',
-                fontSize: 14, fontWeight: 700,
-                cursor: regenerating === meal.slot ? 'default' : 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0, padding: 0,
-                boxShadow: '0 1px 3px rgba(22,163,74,0.15)',
-                animation: regenerating === meal.slot ? 'spin 0.8s linear infinite' : 'none',
-              }}
-            >{regenerating === meal.slot ? '⏳' : '↺'}</button>
-          </div>
+          <div style={s.mealType}>{meal.type_label}</div>
           <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 1 }}>{modeLabel}</div>
           <div style={{
             ...s.mealName,
@@ -346,15 +326,37 @@ function MealCard({ meal, onRegenerate, regenerating }) {
             </div>
           )}
         </div>
-        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 10 }}>
-          <div style={s.mealKcal}>{meal.total_calories}</div>
-          <div style={s.mealKcalLbl}>kcal</div>
+        {/* Prawa strona: kcal + przycisk pill + chevron */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 10 }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={s.mealKcal}>{meal.total_calories}</div>
+            <div style={s.mealKcalLbl}>kcal</div>
+          </div>
+          {/* Przycisk ↺ — wariant A (pill) */}
+          <button
+            onClick={e => { e.stopPropagation(); onRegenerate(meal.slot); }}
+            disabled={regenerating === meal.slot}
+            title="Wygeneruj inny posiłek"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '4px 10px', borderRadius: 20,
+              border: '1.5px solid #16a34a',
+              background: regenerating === meal.slot ? '#f0fdf4' : 'white',
+              color: regenerating === meal.slot ? '#9ca3af' : '#16a34a',
+              fontSize: 12, fontWeight: 700,
+              cursor: regenerating === meal.slot ? 'default' : 'pointer',
+              flexShrink: 0, whiteSpace: 'nowrap',
+              animation: regenerating === meal.slot ? 'spin 0.8s linear infinite' : 'none',
+            }}
+          >
+            {regenerating === meal.slot ? '⏳' : '↺'} inne
+          </button>
+          <div style={{
+            color: '#9ca3af', fontSize: 20,
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s', lineHeight: 1,
+          }}>▾</div>
         </div>
-        <div style={{
-          marginLeft: 10, color: '#9ca3af', fontSize: 20, flexShrink: 0,
-          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-          transition: 'transform 0.2s', lineHeight: 1,
-        }}>▾</div>
       </div>
 
       {open && (
@@ -400,6 +402,7 @@ function ShoppingReport({ plan, onBack, onClear }) {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
     catch { return {}; }
   });
+  const [lightbox, setLightbox] = useState(null); // URL zdjęcia w lightboxie
 
   function toggleCheck(key) {
     setChecked(prev => {
@@ -432,6 +435,29 @@ function ShoppingReport({ plan, onBack, onClear }) {
 
   return (
     <div style={s.screen}>
+      {/* Lightbox */}
+      {lightbox && (
+        <div onClick={() => setLightbox(null)} style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
+          zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 24, cursor: 'zoom-out',
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{ position: 'relative', maxWidth: 340, width: '100%' }}>
+            <img src={lightbox} alt="" style={{
+              width: '100%', maxHeight: '65vh', objectFit: 'contain',
+              borderRadius: 16, background: 'white', padding: 16,
+            }} />
+            <button onClick={() => setLightbox(null)} style={{
+              position: 'absolute', top: -12, right: -12,
+              width: 30, height: 30, borderRadius: '50%',
+              background: 'rgba(0,0,0,0.7)', border: 'none',
+              color: 'white', fontSize: 17, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>×</button>
+          </div>
+        </div>
+      )}
+
       <button style={s.backBtn} onClick={onBack}>← Wróć do planu</button>
 
       <div style={{ marginBottom: 16 }}>
@@ -538,11 +564,12 @@ function ShoppingReport({ plan, onBack, onClear }) {
             }}>
               {done ? '✓' : ''}
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
                 fontSize: 13, color: done ? '#6b7280' : '#1a1a1a',
                 fontWeight: 500,
                 textDecoration: done ? 'line-through' : 'none',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               }}>
                 {ing.product_name}
               </div>
@@ -561,6 +588,20 @@ function ShoppingReport({ plan, onBack, onClear }) {
                 {meal.type_label}{meal.name ? ` · ${meal.name}` : ''}
               </div>
             </div>
+            {/* Miniaturka zdjęcia po prawej */}
+            {ing.image_url && (
+              <img
+                src={ing.image_url}
+                alt={ing.product_name}
+                onClick={e => { e.stopPropagation(); setLightbox(ing.image_url); }}
+                style={{
+                  width: 44, height: 44, borderRadius: 8, flexShrink: 0,
+                  objectFit: 'contain', background: '#f9fafb',
+                  border: '1px solid #e5e7eb', cursor: 'zoom-in',
+                  opacity: done ? 0.4 : 1, transition: 'opacity 0.15s',
+                }}
+              />
+            )}
           </div>
         );
       })}

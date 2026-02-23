@@ -60,7 +60,7 @@ router.post('/', async (req, res) => {
     const [allActiveProducts] = await db.query(
       `SELECT DISTINCT p.id, p.name, p.calories_per_100g, p.protein_per_100g,
               p.carbs_per_100g, p.fat_per_100g, p.serving_unit, p.serving_weight_g,
-              p.category, p.is_ready_to_eat, p.is_generic
+              p.category, p.is_ready_to_eat, p.is_generic, p.image_url
        FROM products p
        JOIN product_stores ps ON p.id = ps.product_id
        WHERE ps.store_id IN (${placeholders})
@@ -78,7 +78,8 @@ router.post('/', async (req, res) => {
     const [meals] = await db.query('SELECT * FROM meals');
     const [ingredients] = await db.query(`
       SELECT mi.*, p.calories_per_100g, p.protein_per_100g, p.carbs_per_100g,
-             p.fat_per_100g, p.serving_weight_g, p.name as product_name, p.is_ready_to_eat
+             p.fat_per_100g, p.serving_weight_g, p.name as product_name, p.is_ready_to_eat,
+             p.image_url
       FROM meal_ingredients mi
       JOIN products p ON mi.product_id = p.id
       WHERE p.status = 'active'
@@ -114,6 +115,7 @@ router.post('/', async (req, res) => {
           unit: i.unit,
           calories: Math.round(calcCalories(i)),
           stores: (productStores[i.product_id] || []),
+          image_url: i.image_url || null,
         }))
       };
     }).filter(Boolean);
@@ -233,6 +235,7 @@ function buildMealSlot(mealsForSlot, readyProducts, targetCal, productStores = {
             quantity: topping.serving_unit === 'piece' ? 1 : servingG,
             unit: topping.serving_unit === 'piece' ? 'piece' : 'g',
             calories: toppingCal,
+            image_url: topping.image_url || null,
           }
         ],
         topping_added: true,
@@ -317,6 +320,7 @@ function buildProductMeal(allProducts, targetCal, slot, productStoresRef = {}) {
       unit: p.serving_unit === 'piece' ? 'piece' : 'g',
       calories: Math.round(caloriesForProduct(p)),
       stores: (productStoresRef[p.id] || []),
+      image_url: p.image_url || null,
     };
   });
 
