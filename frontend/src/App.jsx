@@ -132,12 +132,12 @@ function HelpModal({ onClose }) {
     <div style={s.overlay} onClick={onClose}>
       <div style={s.modal} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-          <div style={{ fontSize: 24, fontWeight: 800, color: '#1a1a1a' }}>🥦 Jak działa NutriCart?</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: '#1a1a1a' }}>🥦 Jak działa DzikiKucharz?</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9ca3af', lineHeight: 1 }}>×</button>
         </div>
 
         <p style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.6, marginBottom: 16 }}>
-          NutriCart to planer posiłków, który dobiera propozycje <strong>na podstawie produktów dostępnych w Twoich sklepach</strong>. Wpisujesz dzienne zapotrzebowanie kaloryczne, wybierasz sklepy i dostajesz gotowy plan na cały dzień.
+          DzikiKucharz to planer posiłków, który dobiera propozycje <strong>na podstawie produktów dostępnych w Twoich sklepach</strong>. Wpisujesz dzienne zapotrzebowanie kaloryczne, wybierasz sklepy i dostajesz gotowy plan na cały dzień.
         </p>
 
         <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: 14, marginBottom: 12 }}>
@@ -309,7 +309,6 @@ function MealCard({ meal, onRegenerate, regenerating }) {
           cursor: 'pointer',
           borderBottom: open ? '1px solid #e5e7eb' : 'none',
           userSelect: 'none',
-          alignItems: 'flex-start',
         }}
       >
         {/* Lewa: info o posiłku */}
@@ -796,8 +795,8 @@ export default function App() {
         * { box-sizing: border-box; }
       `}</style>
       <div style={s.header}>
-        <div style={s.logo}>🥦 NutriCart</div>
-        <div style={s.subtitle}>Inteligentny planer posiłków</div>
+        <div style={s.logo}>🍖 DzikiKucharz</div>
+        <div style={s.subtitle}>Twój codzienny plan żywieniowy</div>
         <button style={s.helpBtn} onClick={() => setShowHelp(true)}>?</button>
       </div>
 
