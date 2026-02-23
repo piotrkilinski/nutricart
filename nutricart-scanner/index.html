@@ -1544,13 +1544,23 @@ function ProductsScreen({ stores, onBack, onHome }) {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterStore, setFilterStore] = useState('all');
   const [editProduct, setEditProduct] = useState(null);
-  const [sortBy, setSortBy] = useState('date_desc'); // date_desc | date_asc | name_asc | name_desc
+  const [sortBy, setSortBy] = useState('date_desc');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
+  const [genericProductId, setGenericProductId] = useState(null);
+  const [genericProducts, setGenericProducts] = useState([]);
 
   function showToast(msg) { setToast(msg); setTimeout(()=>setToast(''),2500); }
 
-  useEffect(()=>{ loadProducts(); }, []);
+  useEffect(()=>{ loadProducts(); loadGenerics(); }, []);
+
+  async function loadGenerics() {
+    try {
+      const res = await fetch(\`\${API}/products/generic\`);
+      const data = await res.json();
+      setGenericProducts(Array.isArray(data) ? data : []);
+    } catch(e) {}
+  }
 
   async function loadProducts() {
     setLoading(true);
@@ -1568,7 +1578,7 @@ function ProductsScreen({ stores, onBack, onHome }) {
       // Aktualizuj status i is_ready_to_eat
       await fetch(`${API}/products/${editProduct.id}/quick-update`, {
         method:'PATCH', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ status: editProduct.status, is_ready_to_eat: editProduct.is_ready_to_eat })
+        body: JSON.stringify({ status: editProduct.status, is_ready_to_eat: editProduct.is_ready_to_eat, generic_product_id: genericProductId||null })
       });
       // Aktualizuj sklepy przez PUT
       const existing = products.find(p=>p.id===editProduct.id);
@@ -1707,7 +1717,11 @@ function ProductsScreen({ stores, onBack, onHome }) {
           <div style={{textAlign:'center',padding:'40px 0',color:'var(--muted)',fontSize:14}}>Brak wyników</div>
         ) : (
           filtered.map(p=>(
-            <div key={p.id} className="product-row" onClick={()=>setEditProduct({...p, store_ids: Array.isArray(p.store_ids) ? p.store_ids : (p.store_ids ? p.store_ids.toString().split(",").map(Number) : [])})}>
+            <div key={p.id} className="product-row" onClick={()=>{
+                const sids = Array.isArray(p.store_ids) ? p.store_ids : (p.store_ids ? p.store_ids.toString().split(',').map(Number) : []);
+                setEditProduct({...p, store_ids: sids});
+                setGenericProductId(p.generic_product_id||null);
+              }}>
               {p.image_url ? <img className="product-row-img" src={p.image_url} alt={p.name} style={{width:44,height:44,borderRadius:10,objectFit:'contain',background:'var(--surface2)'}}/>
                 : <div className="product-row-img">🥫</div>}
               <div className="product-row-info">
@@ -1718,6 +1732,13 @@ function ProductsScreen({ stores, onBack, onHome }) {
                   {p.category||'inne'}
                   {p.created_at&&<> · {new Date(p.created_at).toLocaleDateString('pl-PL')}</>}
                 </div>
+                {(() => {
+                  const sids = Array.isArray(p.store_ids) ? p.store_ids : (p.store_ids ? p.store_ids.toString().split(',').map(Number) : []);
+                  const names = sids.map(id => stores.find(s=>s.id===id)?.name).filter(Boolean);
+                  return names.length > 0
+                    ? <div style={{fontSize:10,color:'var(--accent)',marginTop:2,opacity:0.7}}>{names.join(' · ')}</div>
+                    : null;
+                })()}
               </div>
               <StatusBadge status={p.status}/>
             </div>
