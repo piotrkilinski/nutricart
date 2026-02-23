@@ -136,12 +136,12 @@ router.post('/', async (req, res) => {
       const byType = mealsWithCalories.filter(m => m.meal_type === slot);
 
       if (mode === 'products') {
-        const result = buildProductsSlot(readyProducts, mealsWithCalories, targetCal, slot);
+        const result = buildProductsSlot(readyProducts, mealsWithCalories, targetCal, slot, productStores);
         results.push({ ...result, slot, type_label: slotLabels[slot], mode: 'products' });
 
       } else {
         // tryb 'meal' — znajdź przepis, dopełnij gotowym produktem
-        const result = buildMealSlot(byType, readyProducts, targetCal);
+        const result = buildMealSlot(byType, readyProducts, targetCal, productStores);
         results.push({ ...result, slot, type_label: slotLabels[slot], mode: 'meal' });
       }
     }
@@ -171,7 +171,7 @@ router.post('/', async (req, res) => {
 // Dla każdego slotu: snack-meals (przepisy typu 'snack' złożone z gotowych produktów)
 // mogą być zaproponowane jako szybka przekąska. Dla slotu 'snack' mają wyższy priorytet.
 
-function buildProductsSlot(readyProducts, mealsWithCalories, targetCal, slot) {
+function buildProductsSlot(readyProducts, mealsWithCalories, targetCal, slot, productStores = {}) {
   // Przepisy snack złożone wyłącznie z gotowych produktów (is_ready_to_eat_meal)
   const snackMeals = mealsWithCalories.filter(
     m => m.meal_type === 'snack' && m.is_ready_to_eat_meal
@@ -199,7 +199,7 @@ function buildProductsSlot(readyProducts, mealsWithCalories, targetCal, slot) {
 // ── Tryb MEAL ─────────────────────────────────────────────────────────────────
 // Znajdź przepis. Jeśli brakuje kalorii (>10% różnicy) — dopełnij gotowym produktem.
 
-function buildMealSlot(mealsForSlot, readyProducts, targetCal) {
+function buildMealSlot(mealsForSlot, readyProducts, targetCal, productStores = {}) {
   if (!mealsForSlot.length) {
     return {
       name: 'Brak dostępnych przepisów',
