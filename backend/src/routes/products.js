@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
       FROM products p
       LEFT JOIN product_stores ps ON p.id = ps.product_id
       GROUP BY p.id
-      ORDER BY p.name
+      ORDER BY p.id DESC
     `);
     res.json(products.map(p => ({
       ...p,

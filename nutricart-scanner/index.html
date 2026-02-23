@@ -1543,7 +1543,8 @@ function ProductsScreen({ stores, onBack, onHome }) {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterStore, setFilterStore] = useState('all');
-  const [editProduct, setEditProduct] = useState(null); // { id, status, is_ready_to_eat, store_ids }
+  const [editProduct, setEditProduct] = useState(null);
+  const [sortBy, setSortBy] = useState('date_desc'); // date_desc | date_asc | name_asc | name_desc
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
 
@@ -1556,7 +1557,7 @@ function ProductsScreen({ stores, onBack, onHome }) {
     try {
       const res = await fetch(`${API}/products`);
       const data = await res.json();
-      setProducts(data);
+      setProducts(Array.isArray(data) ? data : []);
     } catch(e) {}
     finally { setLoading(false); }
   }
@@ -1582,12 +1583,21 @@ function ProductsScreen({ stores, onBack, onHome }) {
     finally { setSaving(false); }
   }
 
-  const filtered = products.filter(p => {
-    if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && !(p.brand||'').toLowerCase().includes(search.toLowerCase())) return false;
-    if (filterStatus !== 'all' && p.status !== filterStatus) return false;
-    if (filterStore !== 'all' && !(p.store_ids||[]).includes(Number(filterStore))) return false;
-    return true;
-  });
+  const filtered = products
+    .filter(p => {
+      if (p.is_generic) return false; // ukryj generyczne
+      if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && !(p.brand||'').toLowerCase().includes(search.toLowerCase())) return false;
+      if (filterStatus !== 'all' && p.status !== filterStatus) return false;
+      if (filterStore !== 'all' && !(p.store_ids||[]).includes(Number(filterStore))) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'date_desc') return (b.id||0) - (a.id||0);
+      if (sortBy === 'date_asc')  return (a.id||0) - (b.id||0);
+      if (sortBy === 'name_asc')  return a.name.localeCompare(b.name, 'pl');
+      if (sortBy === 'name_desc') return b.name.localeCompare(a.name, 'pl');
+      return 0;
+    });
 
   if (editProduct) {
     const storeList = stores.filter(s=>s.status!=='deleted');
@@ -1667,6 +1677,18 @@ function ProductsScreen({ stores, onBack, onHome }) {
       <div className="screen">
         <input className="search-input" placeholder="🔍 Szukaj po nazwie lub marce..." value={search} onChange={e=>setSearch(e.target.value)}/>
 
+        <div className="filter-bar" style={{marginBottom:8}}>
+          <span style={{fontSize:10,color:'var(--muted)',fontFamily:'DM Mono,monospace',letterSpacing:1,alignSelf:'center',flexShrink:0}}>SORTUJ:</span>
+          {[
+            ['date_desc','↓ Najnowsze'],
+            ['date_asc', '↑ Najstarsze'],
+            ['name_asc', 'A→Z'],
+            ['name_desc','Z→A'],
+          ].map(([v,l])=>(
+            <button key={v} className={`filter-chip ${sortBy===v?'active':''}`} onClick={()=>setSortBy(v)}>{l}</button>
+          ))}
+        </div>
+
         <div className="filter-bar">
           {[['all','Wszystkie'],['active','Aktywne'],['inactive_incomplete','Niekompletne'],['inactive_deleted','Usunięte']].map(([v,l])=>(
             <button key={v} className={`filter-chip ${filterStatus===v?'active':''}`} onClick={()=>setFilterStatus(v)}>{l}</button>
@@ -1685,7 +1707,7 @@ function ProductsScreen({ stores, onBack, onHome }) {
           <div style={{textAlign:'center',padding:'40px 0',color:'var(--muted)',fontSize:14}}>Brak wyników</div>
         ) : (
           filtered.map(p=>(
-            <div key={p.id} className="product-row" onClick={()=>setEditProduct({...p})}>
+            <div key={p.id} className="product-row" onClick={()=>setEditProduct({...p, store_ids: Array.isArray(p.store_ids) ? p.store_ids : (p.store_ids ? p.store_ids.toString().split(",").map(Number) : [])})}>
               {p.image_url ? <img className="product-row-img" src={p.image_url} alt={p.name} style={{width:44,height:44,borderRadius:10,objectFit:'contain',background:'var(--surface2)'}}/>
                 : <div className="product-row-img">🥫</div>}
               <div className="product-row-info">
@@ -1694,6 +1716,7 @@ function ProductsScreen({ stores, onBack, onHome }) {
                   {p.brand&&<>{p.brand} · </>}
                   {p.calories_per_100g&&<>{Math.round(p.calories_per_100g)} kcal · </>}
                   {p.category||'inne'}
+                  {p.created_at&&<> · {new Date(p.created_at).toLocaleDateString('pl-PL')}</>}
                 </div>
               </div>
               <StatusBadge status={p.status}/>
