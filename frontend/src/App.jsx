@@ -65,7 +65,7 @@ const s = {
   mealCard: {
     background: 'white', borderRadius: 16,
     border: '1px solid #e5e7eb', marginBottom: 12,
-    overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
   },
   mealHeader: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -705,6 +705,7 @@ function PlanScreen({ plan, setPlan, onBack }) {
 
   function handleClear() {
     localStorage.removeItem('nutricart_plan');
+    localStorage.removeItem('nutricart_checked');
     setSaved(false);
     setShowReport(false);
   }
